@@ -1,21 +1,21 @@
 package uk.ac.ceh.components.dynamo;
 
 import uk.ac.ceh.components.dynamo.annotations.ServiceURL;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import uk.ac.ceh.components.dynamo.resolvers.RequestParamResolver;
 
 /**
  *
@@ -26,7 +26,11 @@ public class ServiceURLArgumentResolver implements HandlerMethodArgumentResolver
     
     private final List<QueryParameterResolver> queryParameterResolvers;
     
-    public ServiceURLArgumentResolver(List<QueryParameterResolver> queryParameterResolvers) {
+    public ServiceURLArgumentResolver(){
+        this((List)Arrays.asList(new RequestParamResolver()));
+    }
+    
+    public ServiceURLArgumentResolver(List<QueryParameterResolver> queryParameterResolvers) {       
         this.queryParameterResolvers = queryParameterResolvers;
     }
     
