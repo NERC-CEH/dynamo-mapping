@@ -1,10 +1,9 @@
-package uk.ac.ceh.components.dynamo.resolvers;
+package uk.ac.ceh.components.dynamo.arguments;
 
 import java.util.Collections;
 import java.util.Set;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.annotation.RequestParam;
-import uk.ac.ceh.components.dynamo.QueryParameterResolver;
 
 /**
  *

@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.components.dynamo.arguments;
 
 import java.util.Set;
 import org.springframework.core.MethodParameter;
