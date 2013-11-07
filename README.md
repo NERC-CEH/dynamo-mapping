@@ -16,4 +16,3 @@ Once configured, Dynamo works just like any other spring mvc view resolver.
       ...
       return new ModelAndView("my-templated-mapfile.map", model);
     }
-
