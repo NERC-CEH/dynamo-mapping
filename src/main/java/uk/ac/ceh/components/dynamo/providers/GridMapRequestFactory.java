@@ -16,7 +16,9 @@ public class GridMapRequestFactory {
     public static final int ZOOM_LEVELS = 15;
     private static final int MAP_SERVER_IMAGE_MAXIMUM_DIMENSION_VALUE = 2048;
     private static final int MINX = 0, MINY = 1, MAXX = 2, MAXY=3; //definition of where bbox values live
-        
+    
+    private FeatureResolver featureResolver;
+    
     /**
      * The following method utilises the data api to create a bounding box to focus
      * on.
@@ -26,7 +28,7 @@ public class GridMapRequestFactory {
      */
     public BoundingBox getFeatureToFocusOn(String featureId, String nationalExtent, DynamoMap gridMapProperties) {
         if(featureId != null) {
-            throw new UnsupportedOperationException("Zooming to a feature is not currently supported");
+            return featureResolver.getFeature(featureId);
         }
         else {
             Extent requestedExtent = getRequestedExtent(nationalExtent, gridMapProperties);
