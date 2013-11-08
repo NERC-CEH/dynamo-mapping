@@ -16,7 +16,6 @@ import org.springframework.web.method.support.InvocableHandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import uk.ac.ceh.components.dynamo.providers.GridMapRequestFactory;
 
 /**
  *

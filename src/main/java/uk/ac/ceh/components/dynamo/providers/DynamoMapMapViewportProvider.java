@@ -1,5 +1,6 @@
 package uk.ac.ceh.components.dynamo.providers;
 
+import uk.ac.ceh.components.dynamo.GridMapRequestFactory;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,7 @@ import uk.ac.ceh.components.dynamo.DynamoMap;
 import uk.ac.ceh.components.dynamo.DynamoMapMethod;
 import uk.ac.ceh.components.dynamo.Provider;
 import uk.ac.ceh.components.dynamo.Provides;
-import uk.ac.ceh.components.dynamo.providers.GridMapRequestFactory.GridMapRequest;
+import uk.ac.ceh.components.dynamo.GridMapRequestFactory.GridMapRequest;
 
 /**
  *

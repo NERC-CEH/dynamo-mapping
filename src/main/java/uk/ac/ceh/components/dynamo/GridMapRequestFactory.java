@@ -1,9 +1,7 @@
-package uk.ac.ceh.components.dynamo.providers;
+package uk.ac.ceh.components.dynamo;
 
 import java.math.BigDecimal;
-import org.springframework.stereotype.Component;
-import uk.ac.ceh.components.dynamo.BoundingBox;
-import uk.ac.ceh.components.dynamo.DynamoMap;
+import lombok.Data;
 import uk.ac.ceh.components.dynamo.DynamoMap.Extent;
 
 /**
@@ -11,13 +9,16 @@ import uk.ac.ceh.components.dynamo.DynamoMap.Extent;
  * resolution and imageSize
  * @author Christopher Johnson
  */
-@Component
 public class GridMapRequestFactory {
     public static final int ZOOM_LEVELS = 15;
     private static final int MAP_SERVER_IMAGE_MAXIMUM_DIMENSION_VALUE = 2048;
     private static final int MINX = 0, MINY = 1, MAXX = 2, MAXY=3; //definition of where bbox values live
     
     private FeatureResolver featureResolver;
+    
+    public GridMapRequestFactory(FeatureResolver featureResolver) {
+        this.featureResolver = featureResolver;
+    }
     
     /**
      * The following method utilises the data api to create a bounding box to focus
@@ -67,14 +68,16 @@ public class GridMapRequestFactory {
         return new GridMapRequest(toFocusOn, resolution, imageSize);
     }
     
+    @Data
     public static class GridMapRequest {
         private final int[] griddedBBox;
-        private final int amountOfSquaresX, amountOfSquaresY, amountOfPixelsForGrid;
+        private final int resolution, amountOfSquaresX, amountOfSquaresY, amountOfPixelsForGrid;
         
         /**
          * Performs all the calculations required for creating a grid map request
          */
         private GridMapRequest(BoundingBox toFocusOn, int resolution, int imageSize) {
+            this.resolution = resolution;
             this.griddedBBox = getFeatureBoundingBoxFixedToGrid(toFocusOn, resolution);
             this.amountOfSquaresX = getAmountOfSquaresInDimension(griddedBBox[MAXX], griddedBBox[MINX], resolution);
             this.amountOfSquaresY = getAmountOfSquaresInDimension(griddedBBox[MAXY], griddedBBox[MINY], resolution);

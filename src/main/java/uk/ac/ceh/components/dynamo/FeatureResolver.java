@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo.providers;
+package uk.ac.ceh.components.dynamo;
 
 import uk.ac.ceh.components.dynamo.BoundingBox;
 
