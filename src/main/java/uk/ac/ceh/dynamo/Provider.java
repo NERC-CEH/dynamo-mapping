@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,11 +9,9 @@ import java.lang.annotation.Target;
  * The following annotation represents that this object is capable of providing
  * map requests and modifying them.
  * 
- * @see Provider
+ * @see Provides
  * @author Christopher Johnson
  */
-@Target({ ElementType.METHOD })
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Provides {
-    DynamoMapMethod[] value();
-}
+public @interface Provider {}

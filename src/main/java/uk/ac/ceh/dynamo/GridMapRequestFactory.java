@@ -1,8 +1,8 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import java.math.BigDecimal;
 import lombok.Data;
-import uk.ac.ceh.components.dynamo.DynamoMap.Extent;
+import uk.ac.ceh.dynamo.DynamoMap.Extent;
 
 /**
  * The following factory will generate grid map requests for a given boundingbox
@@ -16,6 +16,19 @@ public class GridMapRequestFactory {
     
     private FeatureResolver featureResolver;
     
+    /**
+     * Default constructor for when a grid map request factory is created without
+     * a FeatureResolver
+     */
+    public GridMapRequestFactory() {
+        this(null);
+    }
+    
+    /**
+     * Constructor which takes a feature resolver which will be used to resolve 
+     * features when a featureId is specified
+     * @param featureResolver 
+     */
     public GridMapRequestFactory(FeatureResolver featureResolver) {
         this.featureResolver = featureResolver;
     }
@@ -28,7 +41,7 @@ public class GridMapRequestFactory {
      * @return A bounding box to focus on
      */
     public BoundingBox getFeatureToFocusOn(String featureId, String nationalExtent, DynamoMap gridMapProperties) {
-        if(featureId != null) {
+        if(featureResolver != null && featureId != null) {
             return featureResolver.getFeature(featureId);
         }
         else {

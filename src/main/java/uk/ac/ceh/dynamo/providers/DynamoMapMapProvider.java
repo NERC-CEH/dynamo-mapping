@@ -1,12 +1,12 @@
-package uk.ac.ceh.components.dynamo.providers;
+package uk.ac.ceh.dynamo.providers;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
-import uk.ac.ceh.components.dynamo.DynamoMapMethod;
-import uk.ac.ceh.components.dynamo.Provider;
-import uk.ac.ceh.components.dynamo.Provides;
+import uk.ac.ceh.dynamo.DynamoMapMethod;
+import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.Provides;
 
 /**
  *

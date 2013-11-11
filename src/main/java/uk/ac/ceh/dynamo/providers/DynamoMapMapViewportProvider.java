@@ -1,17 +1,17 @@
-package uk.ac.ceh.components.dynamo.providers;
+package uk.ac.ceh.dynamo.providers;
 
-import uk.ac.ceh.components.dynamo.GridMapRequestFactory;
+import uk.ac.ceh.dynamo.GridMapRequestFactory;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestParam;
-import uk.ac.ceh.components.dynamo.BoundingBox;
-import uk.ac.ceh.components.dynamo.DynamoMap;
-import uk.ac.ceh.components.dynamo.DynamoMapMethod;
-import uk.ac.ceh.components.dynamo.Provider;
-import uk.ac.ceh.components.dynamo.Provides;
-import uk.ac.ceh.components.dynamo.GridMapRequestFactory.GridMapRequest;
+import uk.ac.ceh.dynamo.BoundingBox;
+import uk.ac.ceh.dynamo.DynamoMap;
+import uk.ac.ceh.dynamo.DynamoMapMethod;
+import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.Provides;
+import uk.ac.ceh.dynamo.GridMapRequestFactory.GridMapRequest;
 
 /**
  *

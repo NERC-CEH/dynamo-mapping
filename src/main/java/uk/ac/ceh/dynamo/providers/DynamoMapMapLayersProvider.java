@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo.providers;
+package uk.ac.ceh.dynamo.providers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,11 +8,11 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
-import uk.ac.ceh.components.dynamo.DynamoMap;
-import uk.ac.ceh.components.dynamo.DynamoMap.Layer;
-import uk.ac.ceh.components.dynamo.DynamoMapMethod;
-import uk.ac.ceh.components.dynamo.Provider;
-import uk.ac.ceh.components.dynamo.Provides;
+import uk.ac.ceh.dynamo.DynamoMap;
+import uk.ac.ceh.dynamo.DynamoMap.Layer;
+import uk.ac.ceh.dynamo.DynamoMapMethod;
+import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.Provides;
 
 /**
  *

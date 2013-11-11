@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo.arguments;
+package uk.ac.ceh.dynamo.arguments;
 
 import java.util.Collections;
 import java.util.Set;
@@ -6,7 +6,9 @@ import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- *
+ * An instance of a QueryParameterResolver which will process @RequestParam
+ * annotations to obtain their query param value
+ * @see RequestParam
  * @author Christopher Johnson
  */
 public class RequestParamResolver implements QueryParameterResolver {

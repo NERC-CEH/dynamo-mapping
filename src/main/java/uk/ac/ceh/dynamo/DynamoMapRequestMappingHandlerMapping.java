@@ -1,41 +1,44 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.web.method.HandlerMethodSelector;
 import org.springframework.web.method.support.InvocableHandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /**
- *
+ * The request mapping handler which will register the DynamoMapControllers request
+ * handlers at all of the end points of Controller Methods annotated with @DynamoMap
  * @author Christopher Johnson
  */
 public class DynamoMapRequestMappingHandlerMapping extends RequestMappingHandlerMapping {
     
     private @Autowired RequestMappingHandlerAdapter adapter;
-    private @Autowired GridMapRequestFactory gridMapHelper;
+    private @Autowired(required=false) FeatureResolver resolver;
     private @Autowired ServletContext context;
     
+    private final GridMapRequestFactory gridMapHelper;
     private final Set<Method> methods;
     
     public DynamoMapRequestMappingHandlerMapping() {
-        this.methods = HandlerMethodSelector.selectMethods(DynamoMapController.class, new ReflectionUtils.MethodFilter() {
-            @Override
-            public boolean matches(Method method) {
-                return getMappingForMethod(method, DynamoMapController.class) != null;
+        this.gridMapHelper = new GridMapRequestFactory(resolver);
+        //scan for request mapping methods in the DynamoMapController
+        this.methods = new HashSet<>();
+        for(Method currMethod: DynamoMapController.class.getMethods()) {
+            if(getMappingForMethod(currMethod, DynamoMapController.class) != null) {
+                this.methods.add(currMethod);
             }
-        });
+        }
     }
     
     @Override

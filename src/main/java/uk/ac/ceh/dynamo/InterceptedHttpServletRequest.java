@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import java.util.Collections;
 import java.util.Enumeration;
@@ -8,7 +8,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
- *
+ * A wrapper around a httpservletrequest. This is useful for modifying a 
+ * HttpServletRequest's parameters ready to then process the modified request
+ * at a different end point
+ * @see DynamoMapRequestMappingHandlerMapping
  * @author Christopher Johnson
  */
 public class InterceptedHttpServletRequest extends HttpServletRequestWrapper {

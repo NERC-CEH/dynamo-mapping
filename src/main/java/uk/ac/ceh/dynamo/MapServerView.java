@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -17,6 +17,8 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.servlet.View;
 
@@ -115,5 +117,12 @@ public class MapServerView implements View {
                 in.close();
             }
         }
+    }
+    
+    @Data
+    @AllArgsConstructor
+    private class Response {
+        private final String contentType;
+        private InputStream inputStream;
     }
 }

@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -11,7 +11,9 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
 /**
- *
+ * A spring mvc view resolver which checks to see if a template exists before
+ * returning a Map Sever View ready for processing
+ * @see MapServerView
  * @author Christopher Johnson
  */
 public class MapServerViewResolver implements ViewResolver {
@@ -28,12 +30,12 @@ public class MapServerViewResolver implements ViewResolver {
     
     @Override
     public View resolveViewName(String viewName, Locale locale) throws Exception {
-        try {
+        File template = new File(templateDirectory, viewName);
+        if(template.isFile() && template.exists()) { 
             Template mapFileTemplate = config.getTemplate(viewName);
-            File templatesParent = new File(templateDirectory, viewName).getParentFile();
-            return new MapServerView(mapServerURL, mapFileTemplate, templatesParent);
+            return new MapServerView(mapServerURL, mapFileTemplate, template.getParentFile());
         }
-        catch(FileNotFoundException fnfe) {
+        else {
             return null;
         }
     }

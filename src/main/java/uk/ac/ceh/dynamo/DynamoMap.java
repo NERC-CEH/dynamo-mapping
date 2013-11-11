@@ -1,4 +1,4 @@
-package uk.ac.ceh.components.dynamo;
+package uk.ac.ceh.dynamo;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
