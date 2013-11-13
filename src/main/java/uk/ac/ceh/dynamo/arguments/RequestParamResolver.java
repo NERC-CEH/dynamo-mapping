@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class RequestParamResolver implements QueryParameterResolver {
 
     @Override
-    public boolean supports(MethodParameter methodParameter) {
+    public boolean supportsParameter(MethodParameter methodParameter) {
         return methodParameter.hasParameterAnnotation(RequestParam.class);
     }
 

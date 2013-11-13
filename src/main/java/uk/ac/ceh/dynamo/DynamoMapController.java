@@ -91,7 +91,7 @@ public class DynamoMapController {
         Map<String, String[]> toReturn = new HashMap<>();
         DynamoMap.GridLayer resolution = getResolution(request.getParameter("resolution"));
         for(InvocableHandlerMethod handler: providers.get(type)) {
-            Map<String,String[]> providersResponse = (Map<String, String[]>)handler.invokeForRequest(request, mavContainer, annotation, resolution);
+            Map<String,String[]> providersResponse = (Map<String, String[]>)handler.invokeForRequest(request, mavContainer, annotation, resolution, gridMapHelper);
             toReturn.putAll(providersResponse);
         }
         return toReturn;

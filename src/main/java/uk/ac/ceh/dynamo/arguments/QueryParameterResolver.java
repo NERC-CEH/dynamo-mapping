@@ -18,7 +18,7 @@ public interface QueryParameterResolver {
      * @param methodParameter The method parameter to be resolved
      * @return true if this MethodParameter can be resolved, else false
      */
-    boolean supports(MethodParameter methodParameter);
+    boolean supportsParameter(MethodParameter methodParameter);
     
     /**
      * Obtain a set of query parameters which may have been used to generate an

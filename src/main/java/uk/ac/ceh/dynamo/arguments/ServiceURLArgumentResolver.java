@@ -92,7 +92,7 @@ public class ServiceURLArgumentResolver implements HandlerMethodArgumentResolver
         
         for(MethodParameter methodParameter: getMethodParameters(method)) {
             for(QueryParameterResolver resolver : queryParameterResolvers) {
-                if(resolver.supports(methodParameter)) {
+                if(resolver.supportsParameter(methodParameter)) {
                     queryParams.addAll(resolver.getUtilisedQueryParameters(methodParameter));
                 }
             }

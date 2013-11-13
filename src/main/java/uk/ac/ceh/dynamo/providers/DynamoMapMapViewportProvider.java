@@ -20,10 +20,10 @@ import uk.ac.ceh.dynamo.GridMapRequestFactory.GridMapRequest;
 @Component
 @Provider
 public class DynamoMapMapViewportProvider {
-    @Autowired GridMapRequestFactory helper;
     
     @Provides(DynamoMapMethod.MAP)
     public Map<String, String[]> processRequestParameters(
+                    GridMapRequestFactory helper,
                     DynamoMap gridMapProperties, 
                     DynamoMap.GridLayer layer,
                     @RequestParam(value="imagesize", required=false, defaultValue="10") String imagesizeStr,
