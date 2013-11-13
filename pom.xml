@@ -1,18 +1,43 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>uk.ac.ceh.components</groupId>
-        <artifactId>components-parent</artifactId>
-        <version>1.0.18-SNAPSHOT</version>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
     </parent>
 
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>uk.ac.ceh</groupId>
     <artifactId>dynamo-mapping</artifactId>
-
-    <name>${project.artifactId}-${project.version}</name>
+    <packaging>jar</packaging>
+    <name>Dynamo Mapping</name>
+    <version>0.1-SNAPSHOT</version>
+    <description>A Spring MVC plugin for creating dynamic MapServer maps with freemarker templates</description>
+    <url>https://github.com/NERC-CEH</url>
+    
+    <licenses>
+        <license>
+            <name>GNU General Public License, version 2</name>
+            <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/NERC-CEH/dynamo-mapping.git</connection>
+        <url>https://github.com/NERC-CEH/dynamo-mapping.git</url>
+    </scm>
+  
+    <developers>
+        <developer>
+            <name>Christopher Johnson</name>
+            <email>chrisajohnson1988@gmail.com</email>
+            <organization>Centre for Ecology &amp; Hydrology</organization>
+            <organizationUrl>http://www.ceh.ac.uk/</organizationUrl>
+        </developer>
+    </developers>
     
     <properties>
+        <spring.version>3.2.2.RELEASE</spring.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -66,4 +91,46 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.10</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.5.7.201204190339</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
