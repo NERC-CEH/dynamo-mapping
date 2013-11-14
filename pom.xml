@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -11,7 +10,7 @@
     <artifactId>dynamo-mapping</artifactId>
     <packaging>jar</packaging>
     <name>Dynamo Mapping</name>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <description>A Spring MVC plugin for creating dynamic MapServer maps with freemarker templates</description>
     <url>https://github.com/NERC-CEH</url>
     
@@ -26,7 +25,8 @@
         <connection>scm:git:http://github.com/NERC-CEH/dynamo-mapping.git</connection>
 	<url>http://github.com/NERC-CEH/dynamo-mapping.git</url>
 	<developerConnection>scm:git:https://github.com/NERC-CEH/dynamo-mapping.git</developerConnection>
-    </scm>
+      <tag>dynamo-mapping-0.1</tag>
+  </scm>
   
     <developers>
         <developer>
