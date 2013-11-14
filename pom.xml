@@ -23,9 +23,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:github.com:NERC-CEH/dynamo-mapping.git</connection>
-        <developerConnection>scm:git:github.com:NERC-CEH/dynamo-mapping.git</developerConnection>
-        <url>git:github.com:NERC-CEH/dynamo-mapping.git</url>
+        <connection>scm:git:https://github.com:NERC-CEH/dynamo-mapping.git</connection>
+        <developerConnection>scm:git:https://git@github.com:NERC-CEH/dynamo-mapping.git</developerConnection>
+        <url>http://github.com/NERC-CEH/dynamo-mapping</url>
     </scm>
   
     <developers>
