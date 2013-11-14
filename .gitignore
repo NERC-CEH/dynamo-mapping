@@ -1,1 +1,5 @@
+#Ignore Bamboo's extra files
+/build-number.txt
+
+#Output of the maven build
 /target/
