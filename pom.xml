@@ -70,6 +70,14 @@
             <scope>provided</scope>
         </dependency>
         
+        <!-- Jersey Client -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.15</version>
+            <optional>true</optional>
+        </dependency>
+        
         <!--Lombok-->
         <dependency>
             <groupId>org.projectlombok</groupId>

@@ -89,7 +89,7 @@ public class GridMapController {
     
     private Map<String, String[]> provideFor(GridMapMethod type, NativeWebRequest request, ModelAndViewContainer mavContainer) throws Exception {
         Map<String, String[]> toReturn = new HashMap<>();
-        GridMap.GridLayer resolution = getResolution(request.getParameter("resolution"));
+        GridMap.GridLayer resolution = getResolution(annotation, request.getParameter("resolution"));
         for(InvocableHandlerMethod handler: providers.get(type)) {
             Map<String,String[]> providersResponse = (Map<String, String[]>)handler.invokeForRequest(request, mavContainer, annotation, resolution, gridMapHelper);
             toReturn.putAll(providersResponse);
@@ -106,8 +106,17 @@ public class GridMapController {
         }
         return toReturn;
     }
-        
-    private GridMap.GridLayer getResolution(String resolution) {
+    
+    /**
+     * Obtain the selected GridLayer from an instance of GridMap and a requested 
+     * resolution
+     * @param annotation The configuration for the gridmap service
+     * @param resolution The requested resolution which should be defined in the
+     *  layers section of the grid map annotation. If null, return the default 
+     *  GridMap.GridLayer as defined in the annotation
+     * @return The requested GridLayer
+     */
+    public static GridMap.GridLayer getResolution(GridMap annotation, String resolution) {
         //Work out which layer to use. Either one requested or this Grid maps default
         String resolutionToUse = (resolution != null) ? resolution : annotation.defaultLayer();
         //Find the layer which corresponds to this resolution
