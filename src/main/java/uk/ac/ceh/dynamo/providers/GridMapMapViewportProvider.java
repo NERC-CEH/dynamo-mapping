@@ -3,13 +3,10 @@ package uk.ac.ceh.dynamo.providers;
 import uk.ac.ceh.dynamo.GridMapRequestFactory;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestParam;
 import uk.ac.ceh.dynamo.BoundingBox;
-import uk.ac.ceh.dynamo.DynamoMap;
-import uk.ac.ceh.dynamo.DynamoMapMethod;
-import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.GridMap;
+import uk.ac.ceh.dynamo.GridMapMethod;
 import uk.ac.ceh.dynamo.Provides;
 import uk.ac.ceh.dynamo.GridMapRequestFactory.GridMapRequest;
 
@@ -17,15 +14,13 @@ import uk.ac.ceh.dynamo.GridMapRequestFactory.GridMapRequest;
  *
  * @author Chris Johnson
  */
-@Component
-@Provider
-public class DynamoMapMapViewportProvider {
+public class GridMapMapViewportProvider {
     
-    @Provides(DynamoMapMethod.MAP)
+    @Provides(GridMapMethod.MAP)
     public Map<String, String[]> processRequestParameters(
                     GridMapRequestFactory helper,
-                    DynamoMap gridMapProperties, 
-                    DynamoMap.GridLayer layer,
+                    GridMap gridMapProperties, 
+                    GridMap.GridLayer layer,
                     @RequestParam(value="imagesize", required=false, defaultValue="10") String imagesizeStr,
                     @RequestParam(value="feature", required=false) String featureId,
                     @RequestParam(value="nationalextent", required=false) String nationExtent) {

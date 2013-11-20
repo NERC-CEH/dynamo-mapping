@@ -2,7 +2,7 @@ package uk.ac.ceh.dynamo;
 
 import java.math.BigDecimal;
 import lombok.Data;
-import uk.ac.ceh.dynamo.DynamoMap.Extent;
+import uk.ac.ceh.dynamo.GridMap.Extent;
 
 /**
  * The following factory will generate grid map requests for a given boundingbox
@@ -40,7 +40,7 @@ public class GridMapRequestFactory {
      * @param gridMapProperties The Grid Map properties which will be used if featureId is null
      * @return A bounding box to focus on
      */
-    public BoundingBox getFeatureToFocusOn(String featureId, String nationalExtent, DynamoMap gridMapProperties) {
+    public BoundingBox getFeatureToFocusOn(String featureId, String nationalExtent, GridMap gridMapProperties) {
         if(featureResolver != null && featureId != null) {
             return featureResolver.getFeature(featureId);
         }
@@ -57,7 +57,7 @@ public class GridMapRequestFactory {
         }
     }
     
-    private static Extent getRequestedExtent(String requestedExtent, DynamoMap gridMapProperties) {
+    private static Extent getRequestedExtent(String requestedExtent, GridMap gridMapProperties) {
         String extentToFind = (requestedExtent !=null) ? requestedExtent : gridMapProperties.defaultExtent();
         for(Extent currExtent : gridMapProperties.extents()) {
             if(currExtent.name().equals(extentToFind)) {

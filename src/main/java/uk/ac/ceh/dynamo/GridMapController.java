@@ -19,23 +19,23 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  *
  * @author Chris Johnson
  */
-public class DynamoMapController {
-    private final DynamoMap annotation;
-    private final Map<DynamoMapMethod, List<InvocableHandlerMethod>> providers;
+public class GridMapController {
+    private final GridMap annotation;
+    private final Map<GridMapMethod, List<InvocableHandlerMethod>> providers;
     private final ServletContext context;
     private final GridMapRequestFactory gridMapHelper;
 
     /**
-     * Constructor for the dynamo mapping controller. 
+     * Constructor for the grid mapping controller. 
      * @param annotation The annotation which is present on the request mapped method
      *  which this controller will use as its mapping endpoint
      * @param providers A map of method types to the providers for that type
      * @param gridMapHelper The grid map helper to use for grid mapping
      * @param context The context this controller is running in
-     * @see DynamoMapRequestMappingHandlerMapping
+     * @see GridMapRequestMappingHandlerMapping
      */
-    public DynamoMapController(DynamoMap annotation, 
-                                Map<DynamoMapMethod, List<InvocableHandlerMethod>> providers, 
+    public GridMapController(GridMap annotation, 
+                                Map<GridMapMethod, List<InvocableHandlerMethod>> providers, 
                                 GridMapRequestFactory gridMapHelper, 
                                 ServletContext context) {
         this.annotation = annotation;
@@ -49,10 +49,10 @@ public class DynamoMapController {
         String uri = request.getNativeRequest(HttpServletRequest.class).getRequestURI();
         
         //Obtain the end part of the requested path until the last '/'. Lookup this 
-        //in the DynamoMapMethod enum
-        DynamoMapMethod dynamoMethod = DynamoMapMethod.valueOf(uri.substring(uri.lastIndexOf('/') + 1).toUpperCase());
+        //in the GridMapMethod enum
+        GridMapMethod gridMapMethod = GridMapMethod.valueOf(uri.substring(uri.lastIndexOf('/') + 1).toUpperCase());
         
-        InterceptedHttpServletRequest newRequest = provideForRequest(dynamoMethod, request, mavContainer);
+        InterceptedHttpServletRequest newRequest = provideForRequest(gridMapMethod, request, mavContainer);
         //Strip the map method part of the url and the servlet context, this is the address
         //to proxy with the wrapped HttpServletRequest
         String host = uri.substring(context.getContextPath().length(), uri.lastIndexOf('/'));
@@ -81,15 +81,15 @@ public class DynamoMapController {
         return toReturn;
     }
     
-    private InterceptedHttpServletRequest provideForRequest(DynamoMapMethod type, NativeWebRequest request, ModelAndViewContainer mavContainer) throws Exception {
+    private InterceptedHttpServletRequest provideForRequest(GridMapMethod type, NativeWebRequest request, ModelAndViewContainer mavContainer) throws Exception {
         return new InterceptedHttpServletRequest(
                 request.getNativeRequest(HttpServletRequest.class), 
                 provideFor(type, request, mavContainer));
     } 
     
-    private Map<String, String[]> provideFor(DynamoMapMethod type, NativeWebRequest request, ModelAndViewContainer mavContainer) throws Exception {
+    private Map<String, String[]> provideFor(GridMapMethod type, NativeWebRequest request, ModelAndViewContainer mavContainer) throws Exception {
         Map<String, String[]> toReturn = new HashMap<>();
-        DynamoMap.GridLayer resolution = getResolution(request.getParameter("resolution"));
+        GridMap.GridLayer resolution = getResolution(request.getParameter("resolution"));
         for(InvocableHandlerMethod handler: providers.get(type)) {
             Map<String,String[]> providersResponse = (Map<String, String[]>)handler.invokeForRequest(request, mavContainer, annotation, resolution, gridMapHelper);
             toReturn.putAll(providersResponse);
@@ -97,9 +97,9 @@ public class DynamoMapController {
         return toReturn;
     }
     
-    private List<String> getAvailableResolutionListForImagesSize(DynamoMap.GridLayer[] layers, BoundingBox featureToFocusOn, int imageSize){
+    private List<String> getAvailableResolutionListForImagesSize(GridMap.GridLayer[] layers, BoundingBox featureToFocusOn, int imageSize){
         List<String> toReturn = new ArrayList<>();
-        for(DynamoMap.GridLayer currLayer : layers) {
+        for(GridMap.GridLayer currLayer : layers) {
             if(gridMapHelper.getGridMapRequest(featureToFocusOn, currLayer.resolution(), imageSize).isValidRequest()) {
                 toReturn.add(currLayer.name());
             }
@@ -107,11 +107,11 @@ public class DynamoMapController {
         return toReturn;
     }
         
-    private DynamoMap.GridLayer getResolution(String resolution) {
+    private GridMap.GridLayer getResolution(String resolution) {
         //Work out which layer to use. Either one requested or this Grid maps default
         String resolutionToUse = (resolution != null) ? resolution : annotation.defaultLayer();
         //Find the layer which corresponds to this resolution
-        for(DynamoMap.GridLayer currLayer : annotation.layers()) {
+        for(GridMap.GridLayer currLayer : annotation.layers()) {
             if(resolutionToUse.equals(currLayer.name())) {
                 return currLayer;
             }

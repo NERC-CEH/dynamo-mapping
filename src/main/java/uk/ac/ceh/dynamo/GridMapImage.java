@@ -15,7 +15,7 @@ import uk.ac.ceh.dynamo.GridMapRequestFactory.GridMapRequest;
  * that image.
  * @author Christopher Johnson
  */
-public class GridMapReader {
+public class GridMapImage {
     private Map<GridSquare, Color> squaresColours;
     private Map<Color, List<GridSquare>> colouredSquares;
     
@@ -24,7 +24,7 @@ public class GridMapReader {
      * @param image the image to read colours from
      * @param request the grid map request used for creating the image
      */
-    public GridMapReader(BufferedImage image, GridMapRequest request) {
+    public GridMapImage(BufferedImage image, GridMapRequest request) {
         this.squaresColours = new HashMap<>();
         this.colouredSquares = new HashMap<>();
         

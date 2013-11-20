@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  * @author Christopher Johnson
  */
 public class GridMapReaderTest {
-    private GridMapReader reader;
+    private GridMapImage reader;
     
     @Before
     public void initialize() throws IOException {
@@ -28,7 +28,7 @@ public class GridMapReaderTest {
                                             BigDecimal.valueOf(1310000));
         GridMapRequestFactory.GridMapRequest gridMapRequest = gridMapRequestFactory.getGridMapRequest(bbox, 10000, 2);
                 
-        reader = new GridMapReader(gridMap, gridMapRequest);
+        reader = new GridMapImage(gridMap, gridMapRequest);
     }
     
     @Test

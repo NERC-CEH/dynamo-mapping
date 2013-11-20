@@ -2,22 +2,18 @@ package uk.ac.ceh.dynamo.providers;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.stereotype.Component;
-import uk.ac.ceh.dynamo.DynamoMap;
-import uk.ac.ceh.dynamo.DynamoMapMethod;
-import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.GridMap;
+import uk.ac.ceh.dynamo.GridMapMethod;
 import uk.ac.ceh.dynamo.Provides;
 
 /**
  *
  * @author Chris Johnson
  */
-@Component
-@Provider
-public class DynamoMapLegendProvider {
+public class GridMapLegendProvider {
     
-    @Provides(DynamoMapMethod.LEGEND) 
-    public Map<String, String[]> processRequestParameters(DynamoMap.GridLayer layer) {
+    @Provides(GridMapMethod.LEGEND) 
+    public Map<String, String[]> processRequestParameters(GridMap.GridLayer layer) {
         Map<String, String[]> toReturn = new HashMap<>();
         toReturn.put("SERVICE", new String[]{"WMS"});
         toReturn.put("VERSION", new String[]{"1.1.1"});

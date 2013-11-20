@@ -3,18 +3,14 @@ package uk.ac.ceh.dynamo.providers;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import org.springframework.stereotype.Component;
-import uk.ac.ceh.dynamo.DynamoMapMethod;
-import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.GridMapMethod;
 import uk.ac.ceh.dynamo.Provides;
 
 /**
  *
  * @author Chris Johnson
  */
-@Component
-@Provider
-public class DynamoMapMapProvider {
+public class GridMapMapProvider {
     private static final Map<String, String> FORMATS;
     
     static {
@@ -24,7 +20,7 @@ public class DynamoMapMapProvider {
         FORMATS.put("jpeg", "image/jpeg");
     }
     
-    @Provides(DynamoMapMethod.MAP)
+    @Provides(GridMapMethod.MAP)
     public Map<String, String[]> processRequestParameters(HttpServletRequest request) {
         Map<String, String[]> toReturn = new HashMap<>();
         toReturn.put("SERVICE", new String[]{"WMS"});

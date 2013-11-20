@@ -5,28 +5,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
-import uk.ac.ceh.dynamo.DynamoMap;
-import uk.ac.ceh.dynamo.DynamoMap.Layer;
-import uk.ac.ceh.dynamo.DynamoMapMethod;
-import uk.ac.ceh.dynamo.Provider;
+import uk.ac.ceh.dynamo.GridMap;
+import uk.ac.ceh.dynamo.GridMap.Layer;
+import uk.ac.ceh.dynamo.GridMapMethod;
 import uk.ac.ceh.dynamo.Provides;
 
 /**
  *
  * @author Chris Johnson
  */
-@Component
-@Provider
-public class DynamoMapMapLayersProvider {
-    @Provides(DynamoMapMethod.MAP)
+public class GridMapMapLayersProvider {
+    @Provides(GridMapMethod.MAP)
     public Map<String, String[]> processRequestParameters(
-            DynamoMap gridMapProperties,
+            GridMap gridMapProperties,
             @RequestParam(value="background", required=false) List<String> requestedBackgroundLayers,
             @RequestParam(value="overlay", required=false) List<String> requestedOverlayLayers,
-            DynamoMap.GridLayer layer) {
+            GridMap.GridLayer layer) {
         Map<String, String[]> toReturn = new HashMap<>();
         
         List<String> layersToRequest = new ArrayList<>();

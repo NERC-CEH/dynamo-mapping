@@ -4,6 +4,7 @@ import uk.ac.ceh.dynamo.arguments.annotations.ServiceURL;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +43,11 @@ public class ServiceURLArgumentResolver implements HandlerMethodArgumentResolver
     private final List<QueryParameterResolver> queryParameterResolvers;
     
     /**
-     * Default Constructor which registers an empty list of custom 
-     * QueryParameterResolvers
+     * Constructor which takes a variable amount of query parameter resolvers
+     * @param queryParameterResolvers A var args of queryParameterResolvers
      */
-    public ServiceURLArgumentResolver() {
-        this(new ArrayList<QueryParameterResolver>());
+    public ServiceURLArgumentResolver(QueryParameterResolver... queryParameterResolvers) { 
+        this(Arrays.asList(queryParameterResolvers));
     }
     
     /**
@@ -55,11 +56,11 @@ public class ServiceURLArgumentResolver implements HandlerMethodArgumentResolver
      * @param queryParameterResolvers Resolvers to process, the order of these
      *  dictates the order in which they will be executed to find query params
      */
-    public ServiceURLArgumentResolver(List<QueryParameterResolver> queryParameterResolvers) {       
-        this.queryParameterResolvers = queryParameterResolvers;
+    public ServiceURLArgumentResolver(List<QueryParameterResolver> queryParameterResolvers) { 
+        this.queryParameterResolvers = new ArrayList<>(queryParameterResolvers);
         this.queryParameterResolvers.add(new RequestParamResolver());
     }
-    
+        
     @Override
     public boolean supportsParameter(MethodParameter mp) {
         return mp.hasParameterAnnotation(ServiceURL.class) && 
