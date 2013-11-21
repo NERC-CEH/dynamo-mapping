@@ -144,7 +144,6 @@ public class GridMapRequestFactory {
             };
         }
 
-
         private static int getAmountOfSquaresInDimension(int viewportDimensionMin, int viewportDimensionMax, int resolution) {
             return Math.abs(viewportDimensionMin - viewportDimensionMax)/resolution;
         }

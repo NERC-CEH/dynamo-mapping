@@ -35,7 +35,7 @@ public class GridMapMapViewportProvider {
         toReturn.put("SRS",     new String[]{ featureToFocusOn.getEpsgCode() });
         toReturn.put("HEIGHT",  new String[]{ Integer.toString(request.getHeight()) });
         toReturn.put("WIDTH",   new String[]{ Integer.toString(request.getWidth()) });
-        toReturn.put("BBOX", new String[] {   request.getBBox()});
+        toReturn.put("BBOX",    new String[] { request.getBBox() });
         return toReturn;
     }
 }

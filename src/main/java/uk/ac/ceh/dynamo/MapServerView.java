@@ -23,7 +23,11 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.web.servlet.View;
 
 /**
- *
+ * The following View is responsible for rendering a map file template and storing
+ * it on disk and then posting the location of that map file to a mapserver instance
+ * along with any other request parameters which may have been supplied in the 
+ * HttpServletRequest which initialised the creation of this view.
+ * 
  * @author Christopher Johnson
  */
 public class MapServerView implements View {    

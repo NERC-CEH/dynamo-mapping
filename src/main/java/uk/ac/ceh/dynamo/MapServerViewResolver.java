@@ -3,7 +3,6 @@ package uk.ac.ceh.dynamo;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
@@ -29,7 +28,7 @@ public class MapServerViewResolver implements ViewResolver {
     }
     
     @Override
-    public View resolveViewName(String viewName, Locale locale) throws Exception {
+    public MapServerView resolveViewName(String viewName, Locale locale) throws Exception {
         File template = new File(templateDirectory, viewName);
         if(template.isFile() && template.exists()) { 
             Template mapFileTemplate = config.getTemplate(viewName);

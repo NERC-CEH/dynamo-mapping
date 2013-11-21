@@ -14,13 +14,13 @@ import static org.junit.Assert.*;
  *
  * @author Christopher Johnson
  */
-public class GridMapReaderTest {
+public class GridMapImageTest {
     private GridMapImage reader;
     
     @Before
     public void initialize() throws IOException {
         GridMapRequestFactory gridMapRequestFactory = new GridMapRequestFactory(null);
-        BufferedImage gridMap = ImageIO.read(GridMapReaderTest.class.getResource("10km @ ImageSize2.png"));
+        BufferedImage gridMap = ImageIO.read(GridMapImageTest.class.getResource("10km @ ImageSize2.png"));
         BoundingBox bbox = new BoundingBox("EPSG:27700", 
                                             BigDecimal.valueOf(-250000), 
                                             BigDecimal.valueOf(-50000),
