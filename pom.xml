@@ -10,7 +10,7 @@
     <artifactId>dynamo-mapping</artifactId>
     <packaging>jar</packaging>
     <name>Dynamo Mapping</name>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
     <description>A Spring MVC plugin for creating dynamic MapServer maps with freemarker templates</description>
     <url>https://github.com/NERC-CEH</url>
     
@@ -25,7 +25,7 @@
         <connection>scm:git:http://github.com/NERC-CEH/dynamo-mapping.git</connection>
 	<url>http://github.com/NERC-CEH/dynamo-mapping.git</url>
 	<developerConnection>scm:git:https://github.com/NERC-CEH/dynamo-mapping.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>dynamo-mapping-0.3</tag>
   </scm>
   
     <developers>
