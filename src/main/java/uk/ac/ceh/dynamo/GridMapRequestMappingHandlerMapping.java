@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.support.DefaultDataBinderFactory;
@@ -31,7 +32,7 @@ public class GridMapRequestMappingHandlerMapping extends RequestMappingHandlerMa
     private @Autowired(required=false) FeatureResolver resolver;
     private @Autowired ServletContext context;
     
-    private final GridMapRequestFactory gridMapHelper;
+    private GridMapRequestFactory gridMapHelper;
     private final Set<Method> methods;
     private final List<Object> providers;
     
@@ -64,7 +65,7 @@ public class GridMapRequestMappingHandlerMapping extends RequestMappingHandlerMa
      */
     public GridMapRequestMappingHandlerMapping(List<Object> providers) {
         this.providers = new ArrayList<>(providers);
-        this.gridMapHelper = new GridMapRequestFactory(resolver);
+        this.gridMapHelper = new GridMapRequestFactory();
         //scan for request mapping methods in the GridMapController
         this.methods = new HashSet<>();
         for(Method currMethod: GridMapController.class.getMethods()) {
@@ -72,6 +73,11 @@ public class GridMapRequestMappingHandlerMapping extends RequestMappingHandlerMa
                 this.methods.add(currMethod);
             }
         }
+    }
+    
+    @PostConstruct
+    public void initalizeGridMapRequestFactory() {
+        this.gridMapHelper = new GridMapRequestFactory(resolver);
     }
     
     @Override

@@ -9,7 +9,7 @@ It is deployed in maven central and can be pulled in using:
     <dependency>
         <groupId>uk.ac.ceh</groupId>
         <artifactId>dynamo-mapping</artifactId>
-        <version>0.3</version>
+        <version>0.5</version>
     </dependency>
 
 At the core of dynamo mapping is the **MapServerViewResolver** which processes templated map files and posts them to a map server instance (along with the Query String of the request) and returns the result to the client.
