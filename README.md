@@ -122,6 +122,6 @@ A fluent api **GridMapImageBuilder** is also available to simplify this task obt
                           .build();
 
 
-# Contributors
+## Contributors
 
-[Christopher Johnson](https://github.com/chrisjohnson1988)
+- [Christopher Johnson](https://github.com/chrisjohnson1988)
