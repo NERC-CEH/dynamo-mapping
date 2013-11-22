@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.servlet.ServletContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.support.DefaultDataBinderFactory;
 import org.springframework.web.method.support.InvocableHandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
@@ -102,6 +103,7 @@ public class GridMapRequestMappingHandlerMapping extends RequestMappingHandlerMa
                 if(isProviderFor(providesMethod, providesFor)) {
                     InvocableHandlerMethod methodInvoker = new InvocableHandlerMethod(provider, providesMethod);
                     methodInvoker.setHandlerMethodArgumentResolvers(adapter.getArgumentResolvers());
+                    methodInvoker.setDataBinderFactory(new DefaultDataBinderFactory(adapter.getWebBindingInitializer()));
                     toReturn.add(methodInvoker);
                 }
             }
