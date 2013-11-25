@@ -48,7 +48,7 @@ public class GridMapMapViewportProviderTest {
         when(gridLayer.resolution()).thenReturn(10000);
         
         //When
-        Map<String,String[]> query = provider.processRequestParameters(factory, gridMap, gridLayer, "10", featureID, nationalExtent);
+        Map<String,String[]> query = provider.processRequestParameters(factory, gridMap, gridLayer, 10, featureID, nationalExtent);
         
         //Then
         assertArrayEquals("Expected the srs base layer", new String[]{"EPSG:7357"}, query.get("SRS"));
@@ -77,9 +77,105 @@ public class GridMapMapViewportProviderTest {
         when(gridLayer.resolution()).thenReturn(10000);
         
         //When
-        Map<String,String[]> query = provider.processRequestParameters(factory, gridMap, gridLayer, "10", null, null);
+        Map<String,String[]> query = provider.processRequestParameters(factory, gridMap, gridLayer, 10, null, null);
         
         //Then
         fail("Expeceted to fail with an illegal argument exception");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void attemptToGenerateAnImageLargerThanSupported() {
+        //Given
+        int imagesize = 70;
+              
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        fail("Expeceted to fail with an illegal argument exception");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void attemptToGenerateAnImageJustLargerThanSupported() {
+        //Given
+        int imagesize = 16;
+                
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        fail("Expeceted to fail with an illegal argument exception");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void attemptToGenerateAnImageJustSmallerThanSupported() {
+        //Given
+        int imagesize = 0;
+                
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        fail("Expeceted to fail with an illegal argument exception");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void attemptToGenerateAnImageSmallerThanSupported() {
+        //Given
+        int imagesize = -170;
+                
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        fail("Expeceted to fail with an illegal argument exception");
+    }
+    
+    
+    @Test
+    public void attemptToGenerateSmallestImageSupported() {
+        //Given
+        int imagesize = 1;
+        
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        //Didn't throw an illegal argument exception
+    }
+  
+    @Test
+    public void attemptToGenerateLargestImageSupported() {
+        //Given
+        int imagesize = 15;
+        
+        //When
+        requestForAParticularImageSize(imagesize);
+        
+        //Then
+        //Didn't throw an illegal argument exception
+    }
+    
+    
+    private void requestForAParticularImageSize(int imagesize) {
+        GridMapRequestFactory factory = mock(GridMapRequestFactory.class);
+        BoundingBox bbox = new BoundingBox("EPSG:7357", BigDecimal.valueOf(1),
+                                                BigDecimal.valueOf(2),
+                                                BigDecimal.valueOf(3),
+                                                BigDecimal.valueOf(4));
+        
+        GridMapRequest request = mock(GridMapRequest.class);
+        when(request.getHeight()).thenReturn(200);
+        when(request.getWidth()).thenReturn(100);
+        when(request.getBBox()).thenReturn("GeneratedBBox");
+        when(request.isValidRequest()).thenReturn(true);
+        
+        GridMap gridMap = mock(GridMap.class);
+        when(factory.getFeatureToFocusOn(anyString(), anyString(), eq(gridMap))).thenReturn(bbox);
+        when(factory.getGridMapRequest(any(BoundingBox.class), anyInt(), eq(imagesize))).thenReturn(request);
+        
+        GridMap.GridLayer gridLayer = mock(GridMap.GridLayer.class);
+        
+        provider.processRequestParameters(factory, gridMap, gridLayer, imagesize, null, null);
     }
 }

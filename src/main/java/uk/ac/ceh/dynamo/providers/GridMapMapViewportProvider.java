@@ -21,12 +21,15 @@ public class GridMapMapViewportProvider {
                     GridMapRequestFactory helper,
                     GridMap gridMapProperties, 
                     GridMap.GridLayer layer,
-                    @RequestParam(value="imagesize", required=false, defaultValue="10") String imagesizeStr,
+                    @RequestParam(value="imagesize", required=false, defaultValue="10") int imagesize,
                     @RequestParam(value="feature", required=false) String featureId,
                     @RequestParam(value="nationalextent", required=false) String nationExtent) {
+        if(!(0 < imagesize && imagesize <= GridMapRequestFactory.ZOOM_LEVELS)) {
+            throw new IllegalArgumentException("The image size parameter should be between 1 and 15");
+        }
         Map<String, String[]> toReturn = new HashMap<>();
         BoundingBox featureToFocusOn = helper.getFeatureToFocusOn(featureId, nationExtent, gridMapProperties);
-        GridMapRequest request = helper.getGridMapRequest(featureToFocusOn, layer.resolution(), Integer.parseInt(imagesizeStr));
+        GridMapRequest request = helper.getGridMapRequest(featureToFocusOn, layer.resolution(), imagesize);
         
         if(!request.isValidRequest()) {
             throw new IllegalArgumentException("It is not possible to create an image for the given parameters.");
