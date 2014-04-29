@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.servlet.View;
+import uk.ac.ceh.dynamo.bread.BreadSlice;
 
 /**
  * The following View is responsible for rendering a map file template and storing
@@ -79,6 +80,7 @@ public class MapServerView implements View {
         }
         finally {
             mapFile.delete();
+            BreadSlice.finishedWithBreadSlices(); //We can get rid of any breadslices which were used now
         }
     }
     

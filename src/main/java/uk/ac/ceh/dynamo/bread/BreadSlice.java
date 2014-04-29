@@ -1,16 +1,22 @@
 package uk.ac.ceh.dynamo.bread;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.AllArgsConstructor;
 
 /**
  *
  * @author Christopher Johnson
  */
 public class BreadSlice {
+    private static final ThreadLocal<LinkedList<BreadSlice>> slicesUsedInThread = new ThreadLocal<LinkedList<BreadSlice>>() {
+        @Override
+        protected LinkedList<BreadSlice> initialValue() {
+            return new LinkedList<>();
+        }
+    };
+    
     private final Object lock = new Object();
     
     private BreadException exception;
@@ -49,9 +55,9 @@ public class BreadSlice {
     }
     
     public void setFileLocation(File location, long bakedTime) {
-        latch.countDown();
         this.location = location;
         this.bakedTime = bakedTime;
+        latch.countDown();
     }
     
     public File getFileLocation() throws BreadException {
@@ -71,7 +77,15 @@ public class BreadSlice {
     
     public void registerUsage() {
         useCounter.getAndIncrement();
-        new Thread(new UsageTracker(Thread.currentThread())).start();
+        slicesUsedInThread.get().add(this); //register this breadslice to the thread
+    }
+    
+    public static void finishedWithBreadSlices() {
+        for(BreadSlice slice : slicesUsedInThread.get()) {
+            slice.useCounter.decrementAndGet();
+            slice.submitForDeletionIfReady();
+        }
+        slicesUsedInThread.set(new LinkedList<BreadSlice>());
     }
     
     public void markAsRotten() {
@@ -89,23 +103,7 @@ public class BreadSlice {
 
     public void setException(BreadException ex) {
         this.exception = ex;
-        useCounter.decrementAndGet();
         markAsRotten();
-    }
-    
-    @AllArgsConstructor
-    private class UsageTracker implements Runnable {
-        private Thread thread;
-        
-        @Override
-        public void run() {
-            try {
-                thread.join();
-            }
-            catch (InterruptedException ex) {
-            }
-            useCounter.decrementAndGet();
-            submitForDeletionIfReady();
-        }
+        latch.countDown();
     }
 }
