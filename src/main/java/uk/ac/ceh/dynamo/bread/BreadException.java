@@ -1,6 +1,8 @@
 package uk.ac.ceh.dynamo.bread;
+
 /**
- *
+ * An exception which is thrown when an exception has occurred which means that 
+ * a slice of bread could not be baked
  * @author Christopher Johnson
  */
 public class BreadException extends Exception {

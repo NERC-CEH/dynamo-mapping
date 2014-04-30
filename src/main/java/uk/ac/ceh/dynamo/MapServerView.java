@@ -80,7 +80,7 @@ public class MapServerView implements View {
         }
         finally {
             mapFile.delete();
-            BreadSlice.finishedWithBreadSlices(); //We can get rid of any breadslices which were used now
+            BreadSlice.finishedEating(); //We can get rid of any breadslices which were used now
         }
     }
     

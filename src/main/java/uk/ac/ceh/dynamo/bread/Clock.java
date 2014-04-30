@@ -1,6 +1,8 @@
 package uk.ac.ceh.dynamo.bread;
+
 /**
- *
+ * A simple interface which allows us to fake the system clock. This is of particular
+ * use in unit tests of the Bread framework
  * @author Christopher Johnson
  */
 public interface Clock {

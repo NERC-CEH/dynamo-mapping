@@ -1,26 +1,23 @@
-/*
- * Copyright (C) 2014 cjohn
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
 package uk.ac.ceh.dynamo.bread;
 
 /**
- *
- * @author cjohn
+ * The following interface defines the climate in which a baker is baking it will
+ * dictate, along with the best before time, if a slice of bread has gone mouldy
+ * or not.
+ * 
+ * The idea is that you would implement climate to limit the size of disk used for
+ * generating files. For example, you may monitor the size of a directory. If it
+ * goes over a certain threshold we can start ramping down the climate. This will
+ * mean that bread slices will expire quicker and overall disk usage wont jump too
+ * high.
+ * @author Christopher Johnson
  */
 public interface Climate {
+    /**
+     * Returns a value between 0 and 1. Where 0 represents the worst type of 
+     * climate, so bad that once a bread slice has been baked it will instantly 
+     * become mouldy. And 1, the climate in which the best before time is met.
+     * @return The current climate in which a given baker is operating.
+     */
     double getCurrentClimate();
 }

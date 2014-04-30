@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.Comparator;
 
 /**
- *
+ * A simple file comparator which will order files into the order which they
+ * were last modified. With early modification being put first.
  * @author Christopher Johnson
  */
 public class FileLastModifiedComparator implements Comparator<File> {
