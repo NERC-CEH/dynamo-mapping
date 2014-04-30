@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -25,29 +25,43 @@ public class Baker {
     private final Map<String, BreadSlice> cache;
     private final Map<String, BreadSlice> bakingCache;
     private final Climate climate;
-    
+    private final Clock clock;
     private final File scratchPad;
-    private int breadSliceId;
     private final long staleTime, rottenTime;
     
+    private int breadSliceId;
+    
     public Baker(Climate climate, File scratchPad, ShapefileGenerator generator, long staleTime, long rottenTime) {
-        this(climate, scratchPad, new LinkedListBreadBin(), generator, staleTime, rottenTime);
+        this(climate, scratchPad, new LinkedListBreadBin(), generator, new SystemClock(), staleTime, rottenTime);
     }
     
-    public Baker(Climate climate, File scratchPad, BreadBin breadBin, ShapefileGenerator generator, long staleTime, long rottenTime) {
+    public Baker(Climate climate, File scratchPad, BreadBin breadBin, ShapefileGenerator generator, Clock clock, long staleTime, long rottenTime) {
         this.scratchPad = scratchPad;
         this.breadBin = breadBin;
         this.generator = generator;
         this.breadSliceId = 0;
         this.cache = new HashMap<>();
         this.bakingCache = new HashMap<>();
+        this.clock = clock;
         this.staleTime = staleTime;
         this.rottenTime = rottenTime;
         this.climate = climate;
         
         this.breadOvens = Executors.newCachedThreadPool();
         this.fileRemoverExecutor = Executors.newSingleThreadExecutor();
-    }    
+        
+        File[] shapefiles = scratchPad.listFiles(new ShapefileFilter());
+        Arrays.sort(shapefiles, new FileLastModifiedComparator());
+        for(File shapefile: shapefiles) {
+            String shapefileName = shapefile.getName();
+            String[] nameparts = shapefileName.substring(0, shapefileName.length()-4).split("_");
+            this.breadSliceId = Integer.parseInt(nameparts[0]);
+            
+            BreadSlice slice = new BreadSlice(this, breadSliceId, nameparts[1]);
+            slice.setFileLocation(shapefile, shapefile.lastModified());
+            putInBreadBin(slice);
+        }
+    }
         
     /**
      * Provide an sql query to the breadbin, if a bread slice exists in this bin
@@ -71,7 +85,6 @@ public class Baker {
             if(cache.containsKey(hash)) {
                 slice = cache.get(hash);
                 if(isStale(slice) && !bakingCache.containsKey(hash)) {
-                    System.out.println("Bread is not rotten but is stale, building in the background");
                     //The given slice is stale, but not rotten.
                     BreadSlice staleReplacement = new BreadSlice(this, breadSliceId++, hash);
                     bakingCache.put(hash, staleReplacement);
@@ -79,16 +92,13 @@ public class Baker {
                 }
             }
             else if(bakingCache.containsKey(hash)) {
-                System.out.println("The main bread is rotten but one is already being generated in the background");
                 //The given slice is not in the main cache, but it is being
                 //populated in a BreadOven. Lets wait upon that.
                 slice = bakingCache.get(hash);
             }
             else { //Neither the main cache or the baking cache contain a matching slice of bread
-                System.out.println("First time seen, baking a new slice");
                 slice = new BreadSlice(this, breadSliceId++, hash);
-                cache.put(hash, slice);
-                breadBin.addBreadSlice(slice);
+                putInBreadBin(slice);
                 bake = true; // Bake the new slice outside of the sync block.
             }
             
@@ -101,11 +111,16 @@ public class Baker {
         return slice.getFileLocation().getAbsolutePath();
     }
     
+    private void putInBreadBin(BreadSlice slice) {
+        cache.put(slice.getHash(), slice);
+        breadBin.addBreadSlice(slice);
+    }
+    
     private void bake(BreadSlice slice, String sql) throws BreadException {
         try {
             File desiredFile = new File(scratchPad, slice.getId() + "_" + slice.getHash() + ".shp");
             File shapefile = generator.getShapefile(desiredFile, sql);
-            slice.setFileLocation(shapefile, Calendar.getInstance().getTimeInMillis());
+            slice.setFileLocation(shapefile, clock.getTimeInMillis());
         }
         catch(BreadException ex) {
             slice.setException(ex);
@@ -114,10 +129,8 @@ public class Baker {
     }
     
     public boolean isStale(BreadSlice slice) {
-        long currentTime = Calendar.getInstance().getTimeInMillis();
-        
         if(slice.isBaked()) {
-            return (slice.getTimeBaked() + staleTime) < currentTime;
+            return (slice.getTimeBaked() + staleTime) < clock.getTimeInMillis();
         }
         return false;
     }
@@ -157,8 +170,7 @@ public class Baker {
      * delete them when the usage hits zero
      */
     private void cleanOutBreadBin() {
-        long currentTime = Calendar.getInstance().getTimeInMillis();
-        long earliestBakeTime = currentTime - (long)(rottenTime * climate.getCurrentClimate());
+        long earliestBakeTime = clock.getTimeInMillis() - (long)(rottenTime * climate.getCurrentClimate());
         for(BreadSlice slice: breadBin.removeRottenBreadSlices(earliestBakeTime)) {
             slice.markAsRotten();
             cache.remove(slice.getHash());
@@ -166,7 +178,6 @@ public class Baker {
     }
     
     public void submitForDeletion(final BreadSlice slice) {
-        System.out.println("Deleting old slice" + slice.getHash());
         fileRemoverExecutor.submit(new Runnable() {
             @Override
             public void run() {
