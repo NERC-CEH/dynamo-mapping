@@ -201,7 +201,6 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
         submitForDeletionIfReady();
     }
     
-    
     private void submitForDeletionIfReady() {
         synchronized(lock) {
             if(isRotten && useCounter.get() == 0) {

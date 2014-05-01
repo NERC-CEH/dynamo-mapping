@@ -1,5 +1,6 @@
 package uk.ac.ceh.dynamo.bread;
 
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
  * @author Christopher Johnson
  */
 public class BreadBin<T, W> {
-    private List<BreadSlice<T,W>> breadSlices;
+    private Deque<BreadSlice<T,W>> breadSlices;
     
     /**
      * A linked list based implementation of a bread bin. This implementation makes
@@ -30,7 +31,7 @@ public class BreadBin<T, W> {
      * Constructs a bread bin with a given backing list of bread slices
      * @param breadSlices 
      */
-    public BreadBin(List<BreadSlice<T,W>> breadSlices) {
+    public BreadBin(Deque<BreadSlice<T,W>> breadSlices) {
         this.breadSlices = breadSlices;
     }
 
@@ -48,7 +49,7 @@ public class BreadBin<T, W> {
         while(iterator.hasNext()) {
             BreadSlice slice = iterator.next();
             
-            if (slice.isBaked() && slice.getTimeBaked() < latestBakeTime) {
+            if (slice.getTimeBaked() < latestBakeTime) {
                 rottenBreadSlices.add(slice);
                 iterator.remove();
             }
@@ -65,6 +66,10 @@ public class BreadBin<T, W> {
      * @param slice 
      */
     public void add(BreadSlice<T, W> slice) {
+        BreadSlice<T, W> lastElement = breadSlices.peekLast();
+        if(!slice.isBaked() || lastElement != null && lastElement.getTimeBaked() > slice.getTimeBaked()) {
+            throw new IllegalArgumentException("The given slice has either not been baked or is older than the latest in the list");
+        }
         breadSlices.add(slice);
     }
     
