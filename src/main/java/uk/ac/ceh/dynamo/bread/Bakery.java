@@ -45,7 +45,7 @@ public class Bakery<T, W> {
      * and a system clock
      */
     public Bakery(W workSurface, Climate climate, DustBin<W> dustbin, Oven<T, W> oven, long staleTime, long rottenTime) {
-        this(workSurface, climate, new LinkedListBreadBin<T, W>(), dustbin, oven, new SystemClock(), staleTime, rottenTime);
+        this(workSurface, climate, new BreadBin<T, W>(), dustbin, oven, new SystemClock(), staleTime, rottenTime);
     }
     
     /**
