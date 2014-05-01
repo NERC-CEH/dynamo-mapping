@@ -14,12 +14,12 @@ import java.util.concurrent.Semaphore;
  * to obtain shapefiles.
  * 
  * This implementation enforces only a certain amount of simultaneous class to
- * #getShapefile(File, String). This simply limits the maximum amount of 
- * processes which java will fork to create.
+ * #cook(File, String). This simply limits the maximum amount of processes which
+ * java will fork to create.
  * 
  * @author Christopher Johnson
  */
-public class ShapefileGenerator implements DustBin<String, File>, Oven<String, File> {
+public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
     private final ExecutorService remover;
     private final Semaphore semaphore;
     private final String ogr2ogr, connectionString;
@@ -38,8 +38,12 @@ public class ShapefileGenerator implements DustBin<String, File>, Oven<String, F
         this.remover = Executors.newSingleThreadExecutor();
     }
 
+    /**
+     * A slice of bread to delete from the work surface
+     * @param slice the slice to remove from disk
+     */
     @Override
-    public void delete(final BreadSlice<String, File> slice) {
+    public void delete(final BreadSlice<?, File> slice) {
         remover.submit(new Runnable() {
             @Override
             public void run() {
@@ -50,8 +54,17 @@ public class ShapefileGenerator implements DustBin<String, File>, Oven<String, F
         });
     }
 
+    /**
+     * Scan through the work surface directory to find any existing shapefiles
+     * which can be reloaded as bread slices.
+     * @param clock The clock that each bread slice should use
+     * @param workSurface the work surface each slice will live on and to read
+     * @param bin the dust bin to give to each bread slice for deletion later
+     * @param staleTime the time it takes for these slices of bread to go stale
+     * @return A list of bread slices from the work surface
+     */
     @Override
-    public List<BreadSlice<String, File>> reload(Clock clock, File workSurface, DustBin<String, File> bin, long staleTime) {
+    public List<BreadSlice<String, File>> reload(Clock clock, File workSurface, DustBin<File> bin, long staleTime) {
         List<BreadSlice<String, File>> slices = new ArrayList<>();
         for(File shapefile: workSurface.listFiles(new ShapefileFilter())) {
             String shapefileName = shapefile.getName();
@@ -72,14 +85,14 @@ public class ShapefileGenerator implements DustBin<String, File>, Oven<String, F
     /**
      * Performs a call to the ogr2ogr command. This method will wait if the maximum
      * simultaneous calls are being performed.
-     * @param output The desired output file
+     * @param slice the slice to populate
      * @param sql the sql statement to use for generating the shape file
      * @return the outputed shape file (the .shp part)
      * @throws BreadException 
      */
     @Override
-    public String cook(File workSurface, BreadSlice<String, File> slice, String ingredients) throws BreadException {
-        File output = new File(workSurface, slice.getId() + "_" + slice.getHash());
+    public String cook(BreadSlice<String, File> slice, String sql) throws BreadException {
+        File output = new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash());
         try {
             semaphore.acquire();
             try {
@@ -90,7 +103,7 @@ public class ShapefileGenerator implements DustBin<String, File>, Oven<String, F
                         output.getAbsolutePath(),
                         connectionString,
                         "-sql",
-                        ingredients
+                        sql
                     );
 
                 //Start the process and wait for it to end

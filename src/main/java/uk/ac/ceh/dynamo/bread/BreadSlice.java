@@ -33,7 +33,7 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
     private final AtomicInteger useCounter;
     private long bakedTime;
     private final CountDownLatch latch;
-    private final DustBin<T,W> dustBin;
+    private final DustBin<W> dustBin;
     private final W workSurface;
     private final long staleTime;
     private final Clock clock;
@@ -53,7 +53,7 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
      * @param clock a clock for measuring time
      * @param remover the shapefile remover for deleteing the full set of shapefile parts
      */
-    public BreadSlice(int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<T, W> dustBin) {
+    public BreadSlice(int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<W> dustBin) {
         this.id = id;
         this.queryHash = queryHash;
         this.dustBin = dustBin;
@@ -72,7 +72,7 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
      * @param clock A clock to use for obtaining time
      * @param remover The remover to use for removing this BreadSlice when it is not needed
      */
-    public BreadSlice(T preBaked, long bakedTime, int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<T, W> dustBin) {
+    public BreadSlice(T preBaked, long bakedTime, int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<W> dustBin) {
         this.id = id;
         this.queryHash = queryHash;
         this.dustBin = dustBin;
