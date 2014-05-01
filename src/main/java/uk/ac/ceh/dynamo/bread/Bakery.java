@@ -1,11 +1,12 @@
 package uk.ac.ceh.dynamo.bread;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,10 +14,10 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.codec.binary.Hex;
 
 /**
- * The following is an instance of a baker. A baker bake bread slices and puts 
+ * The following is an instance of a bakery. Bakery's bake bread slices and put 
  * them into a bread bin.
  * 
- * Fundamentally a baker is a double buffered cache for shapefiles from sql 
+ * Fundamentally a bakery is a double buffered cache for shapefiles from sql 
  * statements, it is thread safe and intended to be used in a dynamo mapping 
  * web application.
  * 
@@ -29,19 +30,19 @@ import org.apache.commons.codec.binary.Hex;
  * The baker will manage the removal of mouldy shapefiles.
  * @author Christopher Johnson
  */
-public class Baker {
+public class Bakery<T, W> {
     private final Object lock = new Object();
     
-    private final ShapefileGenerator generator;
+    private final W workSurface;
+    private final Oven<T, W> oven;
+    private final DustBin<T, W> dustbin;
     private final ExecutorService breadOvens;
-    private final BreadBin breadBin;
-    private final Map<String, BreadSlice> cache;
-    private final Map<String, BreadSlice> bakingCache;
+    private final BreadBin<T, W> breadBin;
+    private final Map<String, BreadSlice<T, W>> cache;
+    private final Map<String, BreadSlice<T, W>> bakingCache;
     private final Climate climate;
     private final Clock clock;
-    private final File scratchPad;
     private final long staleTime, bestBeforeTime;
-    private final ShapefileRemover remover;
     
     private int breadSliceId;
     
@@ -49,12 +50,12 @@ public class Baker {
      * Constructs a Baker with a default LinkedListBreadBin, ShapefileRemover
      * and a system clock
      */
-    public Baker(Climate climate, File scratchPad, ShapefileGenerator generator, long staleTime, long rottenTime) {
-        this(climate, scratchPad, new LinkedListBreadBin(), generator, new ShapefileRemover(scratchPad), new SystemClock(), staleTime, rottenTime);
+    public Bakery(W workSurface, Climate climate, DustBin<T, W> dustbin, Oven<T, W> oven, long staleTime, long rottenTime) {
+        this(workSurface, climate, new LinkedListBreadBin<T, W>(), dustbin, oven, new SystemClock(), staleTime, rottenTime);
     }
     
     /**
-     * Construct a Baker in a given scrachpad. If the scratch pad already contains
+     * Construct a Bakery in a given scrachpad. If the scratch pad already contains
      * shapefiles, these will be processed in to bread slices and then be hosted
      * as long as they are not stale or mouldy.
      * 
@@ -71,11 +72,11 @@ public class Baker {
      * @param bestBeforeTime the time which when multipled by the current climate
      *  dictates if a bread slice is mouldy
      */
-    public Baker(Climate climate, File scratchPad, BreadBin breadBin, ShapefileGenerator generator, ShapefileRemover remover, Clock clock, long staleTime, long bestBeforeTime) {
-        this.remover = remover;
-        this.scratchPad = scratchPad;
+    public Bakery(W workSurface, Climate climate, BreadBin<T, W> breadBin, DustBin<T, W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime) {
+        this.workSurface = workSurface;
+        this.oven = oven;
         this.breadBin = breadBin;
-        this.generator = generator;
+        this.dustbin = dustbin;
         this.breadSliceId = 0;
         this.cache = new HashMap<>();
         this.bakingCache = new HashMap<>();
@@ -86,12 +87,11 @@ public class Baker {
         
         this.breadOvens = Executors.newCachedThreadPool();
         
-        //The scratch pad may contain existing cache files, we can bring this 
+         //The oven may contain existing built caches, we can bring this 
         //baker back into action based upon the data there.
-        File[] shapefiles = scratchPad.listFiles(new ShapefileFilter());
-        Arrays.sort(shapefiles, new FileLastModifiedComparator());
-        for(File shapefile: shapefiles) {
-            BreadSlice slice = new BreadSlice(shapefile, staleTime, clock, remover);
+        List<BreadSlice<T, W>> existingSlices = new ArrayList<>(oven.reload(clock, workSurface, dustbin, staleTime));
+        Collections.sort(existingSlices); //Sort into order
+        for(BreadSlice slice: existingSlices) {
             putInBreadBin(slice);
             breadSliceId = slice.getId() + 1;
         }
@@ -105,9 +105,9 @@ public class Baker {
      * @param sqlQuery to query against the shapefile generator
      * @return The location to the shapefile stored on disk
      */
-    public String getData(String sqlQuery) throws BreadException {
+    public T getData(String sqlQuery) throws BreadException {
         String hash = getSha1(sqlQuery); //get the hash of the query
-        BreadSlice slice;
+        BreadSlice<T, W> slice;
         boolean bake = false; //assume that we don't need to bake
         
         synchronized (lock) {
@@ -121,9 +121,9 @@ public class Baker {
                 slice = cache.get(hash);
                 if(slice.isStale() && !bakingCache.containsKey(hash)) {
                     //The given slice is stale, but not rotten.
-                    BreadSlice staleReplacement = new BreadSlice(breadSliceId++, hash, staleTime, clock, remover);
+                    BreadSlice<T, W> staleReplacement = new BreadSlice<>(breadSliceId++, hash, staleTime, clock, workSurface, dustbin);
                     bakingCache.put(hash, staleReplacement);
-                    breadOvens.submit(new BreadOven(staleReplacement, sqlQuery));
+                    breadOvens.submit(new Baker(staleReplacement, sqlQuery));
                 }
             }
             else if(bakingCache.containsKey(hash)) {
@@ -132,7 +132,7 @@ public class Baker {
                 slice = bakingCache.get(hash);
             }
             else { //Neither the main cache or the baking cache contain a matching slice of bread
-                slice = new BreadSlice(breadSliceId++, hash, staleTime, clock, remover);
+                slice = new BreadSlice<>(breadSliceId++, hash, staleTime, clock, workSurface, dustbin);
                 putInBreadBin(slice);
                 bake = true; // Bake the new slice outside of the sync block.
             }
@@ -141,9 +141,9 @@ public class Baker {
         }
         
         if(bake) {
-            new BreadOven(slice, sqlQuery).bake(); //Bake synchronously
+            new Baker(slice, sqlQuery).bake(); //Bake synchronously
         }
-        return slice.getBakedFile().getAbsolutePath();
+        return slice.getBaked();
     }
     
     /**
@@ -151,9 +151,9 @@ public class Baker {
      * it, handing it out to threads for eating as long as has not gone mouldy
      * @param slice 
      */
-    public final void putInBreadBin(BreadSlice slice) {
+    public final void putInBreadBin(BreadSlice<T, W> slice) {
         synchronized (lock) {
-            BreadSlice oldBreadslice = cache.put(slice.getHash(), slice); //add to the real cache
+            BreadSlice<T, W> oldBreadslice = cache.put(slice.getHash(), slice); //add to the real cache
             breadBin.add(slice);
             if (oldBreadslice != null) {
                 breadBin.remove(oldBreadslice);
@@ -162,9 +162,34 @@ public class Baker {
         }
     }
     
+    /**
+     * Returns the dustbin which is used by this bakery. This is used to throw 
+     * away old slices of bread.
+     * @return This bakery's dust bin
+     */
+    public DustBin<T, W> getDustbin() {
+        return dustbin;
+    }
+    
+    /**
+     * Obtain the clock used by this bakery
+     * @return the bakery's clock
+     */
+    public Clock getClock() {
+        return clock;
+    }
+    
+    /**
+     * The worksurface, this is a place which may be used by this bakery for making
+     * bread slices.
+     */
+    public W getWorkSurface() {
+        return workSurface;
+    }
+    
     @AllArgsConstructor
-    private class BreadOven implements Runnable {
-        private final BreadSlice slice;
+    private class Baker implements Runnable {
+        private final BreadSlice<T, W> slice;
         private final String sql;
         
         /**
@@ -199,9 +224,8 @@ public class Baker {
          */
         public void bake() throws BreadException {
             try {
-                File desiredFile = new File(scratchPad, slice.getId() + "_" + slice.getHash() + ".shp");
-                File shapefile = generator.getShapefile(desiredFile, sql);
-                slice.setBakedFile(shapefile);
+                T cooked = oven.cook(workSurface, slice, sql);
+                slice.setBaked(cooked);
             }
             catch(BreadException ex) {
                 slice.setException(ex);

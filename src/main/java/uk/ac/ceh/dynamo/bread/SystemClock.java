@@ -16,5 +16,4 @@ public class SystemClock implements Clock {
     public long getTimeInMillis() {
         return Calendar.getInstance().getTimeInMillis();
     }
-
 }

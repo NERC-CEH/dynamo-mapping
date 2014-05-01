@@ -1,6 +1,5 @@
 package uk.ac.ceh.dynamo.bread;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see Baker#cleanOutBreadBin() 
  * @author Christopher Johnson
  */
-public class BreadSlice {
+public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
     private static final ThreadLocal<LinkedList<BreadSlice>> SLICES_USED_BY_THREAD = new ThreadLocal<LinkedList<BreadSlice>>() {
         @Override
         protected LinkedList<BreadSlice> initialValue() {
@@ -34,12 +33,13 @@ public class BreadSlice {
     private final AtomicInteger useCounter;
     private long bakedTime;
     private final CountDownLatch latch;
-    private final ShapefileRemover remover;
+    private final DustBin<T,W> dustBin;
+    private final W workSurface;
     private final long staleTime;
     private final Clock clock;
     private final Object lock = new Object();
     
-    private File location;
+    private T baked;
     private BreadException exception;
     private boolean isRotten;
     
@@ -53,13 +53,13 @@ public class BreadSlice {
      * @param clock a clock for measuring time
      * @param remover the shapefile remover for deleteing the full set of shapefile parts
      */
-    public BreadSlice(int id, String queryHash, long staleTime, Clock clock, ShapefileRemover remover) {
+    public BreadSlice(int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<T, W> dustBin) {
         this.id = id;
         this.queryHash = queryHash;
-        
+        this.dustBin = dustBin;
         this.staleTime = staleTime;
         this.clock = clock;
-        this.remover = remover;
+        this.workSurface = workSurface;
         this.isRotten = false;
         this.useCounter = new AtomicInteger(0);
         this.latch = new CountDownLatch(1);
@@ -72,22 +72,20 @@ public class BreadSlice {
      * @param clock A clock to use for obtaining time
      * @param remover The remover to use for removing this BreadSlice when it is not needed
      */
-    public BreadSlice(File preBakedFile, long staleTime, Clock clock, ShapefileRemover remover) {
-        String shapefileName = preBakedFile.getName();
-        String[] nameparts = shapefileName.substring(0, shapefileName.length()-4).split("_");
-        this.id = Integer.parseInt(nameparts[0]);
-        this.queryHash = nameparts[1];
-        
+    public BreadSlice(T preBaked, long bakedTime, int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<T, W> dustBin) {
+        this.id = id;
+        this.queryHash = queryHash;
+        this.dustBin = dustBin;
         this.staleTime = staleTime;
         this.clock = clock;
-        this.remover = remover;
+        this.workSurface = workSurface;
         this.isRotten = false;
         this.useCounter = new AtomicInteger(0);
         this.latch = new CountDownLatch(0); //already generated shapefile, no need to wait
         
         //Set location and usage time
-        this.location = preBakedFile;
-        this.bakedTime = preBakedFile.lastModified();
+        this.baked = preBaked;
+        this.bakedTime = bakedTime;
     }
     
     /**
@@ -108,7 +106,7 @@ public class BreadSlice {
      * @return if this breadslice is already baked
      */
     public boolean isBaked() {
-        return location != null;
+        return baked != null;
     }
     
     /**
@@ -116,6 +114,14 @@ public class BreadSlice {
      */
     public int getId() {
         return id;
+    }
+    
+    /**
+     * Get the worksurface this breadslice was baked on
+     * @return 
+     */
+    public W getWorkSurface() {
+        return workSurface;
     }
     
     /**
@@ -142,14 +148,14 @@ public class BreadSlice {
      * @return The file set using the setBaked file method
      * @throws BreadException if setException has been called
      */
-    public File getBakedFile() throws BreadException {
+    public T getBaked() throws BreadException {
         try {
             latch.await(); //block until the latch is down to zero
             if(exception != null) {
                 throw exception;
             }
             else {
-                return location;
+                return baked;
             }
         }
         catch(InterruptedException ie) {
@@ -199,7 +205,7 @@ public class BreadSlice {
     private void submitForDeletionIfReady() {
         synchronized(lock) {
             if(isRotten && useCounter.get() == 0) {
-                remover.submitForDeletion(this);
+                dustBin.delete(this);
             }
         }
     }
@@ -219,11 +225,19 @@ public class BreadSlice {
     /**
      * Sets the baked file location, this is the reference to the file which is
      * fully populated and is ready to be sent to map server for rendering
-     * @param location the pre baked file
+     * @param output the pre baked content
      */
-    public void setBakedFile(File location) {
-        this.location = location;
+    public void setBaked(T output) {
+        this.baked = output;
         this.bakedTime = clock.getTimeInMillis();
         latch.countDown();
+    }
+
+    @Override
+    public int compareTo(BreadSlice<T, W> o) {
+        long difference = bakedTime - o.bakedTime;
+        if     (difference < 0) return -1;
+        else if(difference > 0) return 1;
+        else                    return 0;
     }
 }

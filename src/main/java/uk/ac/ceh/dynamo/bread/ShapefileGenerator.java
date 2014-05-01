@@ -1,7 +1,12 @@
 package uk.ac.ceh.dynamo.bread;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -14,7 +19,8 @@ import java.util.concurrent.Semaphore;
  * 
  * @author Christopher Johnson
  */
-public class ShapefileGenerator {
+public class ShapefileGenerator implements DustBin<String, File>, Oven<String, File> {
+    private final ExecutorService remover;
     private final Semaphore semaphore;
     private final String ogr2ogr, connectionString;
     
@@ -29,6 +35,38 @@ public class ShapefileGenerator {
         this.ogr2ogr = ogr2ogr;
         this.connectionString = connectionString;
         this.semaphore = new Semaphore(simultaneousProcesses, true);
+        this.remover = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    public void delete(final BreadSlice<String, File> slice) {
+        remover.submit(new Runnable() {
+            @Override
+            public void run() {
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shp").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shx").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".dbf").delete();
+            }
+        });
+    }
+
+    @Override
+    public List<BreadSlice<String, File>> reload(Clock clock, File workSurface, DustBin<String, File> bin, long staleTime) {
+        List<BreadSlice<String, File>> slices = new ArrayList<>();
+        for(File shapefile: workSurface.listFiles(new ShapefileFilter())) {
+            String shapefileName = shapefile.getName();
+            String[] nameparts = shapefileName.substring(0, shapefileName.length()-4).split("_");
+             
+            slices.add(new BreadSlice<>(    shapefileName, 
+                                            shapefile.lastModified(), 
+                                            Integer.parseInt(nameparts[0]), 
+                                            nameparts[1],
+                                            staleTime,
+                                            clock,
+                                            workSurface,
+                                            bin));
+        }
+        return slices;
     }
     
     /**
@@ -39,7 +77,9 @@ public class ShapefileGenerator {
      * @return the outputed shape file (the .shp part)
      * @throws BreadException 
      */
-    public File getShapefile(File output, String sql) throws BreadException {
+    @Override
+    public String cook(File workSurface, BreadSlice<String, File> slice, String ingredients) throws BreadException {
+        File output = new File(workSurface, slice.getId() + "_" + slice.getHash());
         try {
             semaphore.acquire();
             try {
@@ -50,7 +90,7 @@ public class ShapefileGenerator {
                         output.getAbsolutePath(),
                         connectionString,
                         "-sql",
-                        sql
+                        ingredients
                     );
 
                 //Start the process and wait for it to end
@@ -59,7 +99,7 @@ public class ShapefileGenerator {
                 if (process.waitFor() != 0) {
                     throw new BreadException("The ogr2ogr command failed to execute");
                 }
-                return output;
+                return output.getAbsolutePath();
             }
             finally {
                 semaphore.release();
@@ -69,4 +109,23 @@ public class ShapefileGenerator {
             throw new BreadException("Failed to generate shapefile", ex);
         }
     }
+    
+    /**
+    * A simple filename filter for locating shapefiles. Those files which have the 
+    * extension .shp
+    * @author Christopher Johnson
+    */
+   public static class ShapefileFilter implements FilenameFilter {
+
+       /**
+        * Check if the given file is a shapefile
+        * @param dir The directory which the shapefile was found
+        * @param name The name of the file to check
+        * @return If the files extension is .shp
+        */
+       @Override
+       public boolean accept(File dir, String name) {
+           return name.toLowerCase().endsWith(".shp");
+       }
+   }
 }

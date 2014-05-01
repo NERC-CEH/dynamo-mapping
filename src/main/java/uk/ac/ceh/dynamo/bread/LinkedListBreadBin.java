@@ -13,7 +13,7 @@ import java.util.List;
  * @see Baker
  * @author Christopher Johnson
  */
-public class LinkedListBreadBin implements BreadBin {
+public class LinkedListBreadBin<T, W> implements BreadBin<T, W> {
     private List<BreadSlice> breadSlices;
     
     public LinkedListBreadBin() {
@@ -28,8 +28,8 @@ public class LinkedListBreadBin implements BreadBin {
      * @return A list of mouldy bread slices taken out of this bread bin
      */
     @Override
-    public List<BreadSlice> removeMouldy(long latestBakeTime) {
-        List<BreadSlice> rottenBreadSlices = new LinkedList<>();
+    public List<BreadSlice<T, W>> removeMouldy(long latestBakeTime) {
+        List<BreadSlice<T, W>> rottenBreadSlices = new LinkedList<>();
         
         Iterator<BreadSlice> iterator = breadSlices.iterator();
         while(iterator.hasNext()) {
@@ -52,7 +52,7 @@ public class LinkedListBreadBin implements BreadBin {
      *  linked list, it will have O(1) timing.
      */
     @Override
-    public void add(BreadSlice slice) {
+    public void add(BreadSlice<T, W> slice) {
         breadSlices.add(slice);
     }
     
@@ -63,7 +63,7 @@ public class LinkedListBreadBin implements BreadBin {
      * @return if the slice was removed
      */
     @Override
-    public boolean remove(BreadSlice slice) {
+    public boolean remove(BreadSlice<T, W> slice) {
         return breadSlices.remove(slice);
     }
 }
