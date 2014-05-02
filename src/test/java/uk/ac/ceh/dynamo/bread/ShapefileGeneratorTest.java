@@ -55,7 +55,7 @@ public class ShapefileGeneratorTest {
         //Then
         verify(semaphore, times(1)).acquire(); //Semaphore went down
         verify(semaphore, times(1)).release();//Semaphore went up
-        verify(generator, times(1)).process(eq(new File(workSurface, "0_HASH")), eq(sql));
+        verify(generator, times(1)).process(eq(new File(workSurface, "0_HASH.shp")), eq(sql));
     }
     
     @Test

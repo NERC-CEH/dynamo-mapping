@@ -99,7 +99,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
      */
     @Override
     public String cook(BreadSlice<String, File> slice, String sql) throws BreadException {
-        File output = new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash());
+        File output = new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shp");
         try {
             semaphore.acquire();
             try {
