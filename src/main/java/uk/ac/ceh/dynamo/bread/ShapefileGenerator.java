@@ -32,10 +32,17 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
      *  simultaneously
      */
     public ShapefileGenerator(String ogr2ogr, String connectionString, int simultaneousProcesses) {
+        this(ogr2ogr, connectionString, new Semaphore(simultaneousProcesses, true), Executors.newSingleThreadExecutor());
+    }
+    
+    /**
+     * Dependency injection constructor
+     */
+    protected ShapefileGenerator(String ogr2ogr, String connectionString, Semaphore semaphore, ExecutorService remover) {
         this.ogr2ogr = ogr2ogr;
         this.connectionString = connectionString;
-        this.semaphore = new Semaphore(simultaneousProcesses, true);
-        this.remover = Executors.newSingleThreadExecutor();
+        this.semaphore = semaphore;
+        this.remover = remover;
     }
 
     /**
@@ -96,22 +103,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
         try {
             semaphore.acquire();
             try {
-                ProcessBuilder processBuilder = new ProcessBuilder(
-                        ogr2ogr,
-                        "-f",
-                        "ESRI Shapefile",
-                        output.getAbsolutePath(),
-                        connectionString,
-                        "-sql",
-                        sql
-                    );
-
-                //Start the process and wait for it to end
-                processBuilder.inheritIO(); //Output any errors to the default log files
-                Process process = processBuilder.start();
-                if (process.waitFor() != 0) {
-                    throw new BreadException("The ogr2ogr command failed to execute");
-                }
+                process(output, sql);
                 return output.getAbsolutePath();
             }
             finally {
@@ -120,6 +112,25 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
         }
         catch(IOException | InterruptedException ex) {
             throw new BreadException("Failed to generate shapefile", ex);
+        }
+    }
+    
+    protected void process(File output, String sql) throws IOException, InterruptedException, BreadException {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                ogr2ogr,
+                "-f",
+                "ESRI Shapefile",
+                output.getAbsolutePath(),
+                connectionString,
+                "-sql",
+                sql
+            );
+
+        //Start the process and wait for it to end
+        processBuilder.inheritIO(); //Output any errors to the default log files
+        Process process = processBuilder.start();
+        if (process.waitFor() != 0) {
+            throw new BreadException("The ogr2ogr command failed to execute");
         }
     }
     
