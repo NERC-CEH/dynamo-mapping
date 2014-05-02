@@ -12,12 +12,13 @@ package uk.ac.ceh.dynamo.bread;
  * high.
  * @author Christopher Johnson
  */
-public interface Climate {
+public interface Climate<T,W> {
     /**
      * Returns a value between 0 and 1. Where 0 represents the worst type of 
      * climate, so bad that once a bread slice has been baked it will instantly 
      * become mouldy. And 1, the climate in which the best before time is met.
+     * @param bakery the bakery to determine the climate of
      * @return The current climate in which a given baker is operating.
      */
-    double getCurrentClimate();
+    double getCurrentClimate(Bakery<T, W> bakery);
 }

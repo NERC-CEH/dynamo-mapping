@@ -12,4 +12,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class UpdatableClimate implements Climate {
     private double currentClimate = 1d;
+
+    @Override
+    public double getCurrentClimate(Bakery bakery) {
+        return getCurrentClimate();
+    }
 }

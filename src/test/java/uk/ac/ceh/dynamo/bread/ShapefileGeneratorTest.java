@@ -2,7 +2,6 @@ package uk.ac.ceh.dynamo.bread;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.String;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
