@@ -3,6 +3,7 @@ package uk.ac.ceh.dynamo.bread;
 import java.io.File;
 import java.io.IOException;
 import java.lang.String;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -86,7 +87,47 @@ public class ShapefileGeneratorTest {
     } 
     
     @Test
-    public void checkCanReloadFromExistingDirectory() {
+    public void checkCanReloadFromExistingDirectory() throws IOException {
+        //Given
+        Clock clock = mock(Clock.class);
+        long staleTime = 2000;
+        folder.newFile("0_HASH-WHATEVER.shp");
+        folder.newFile("2_HASH-WHATEVER.shp");
         
+        //When
+        List<BreadSlice<String, File>> slices = generator.reload(clock, folder.getRoot(), generator, staleTime);
+        
+        //Then
+        assertEquals("Expected two slices in the bread bin", 2, slices.size());
+    }
+    
+    @Test
+    public void checkThatOtherFilesDontGetLoaded() throws IOException {
+        Clock clock = mock(Clock.class);
+        long staleTime = 2000;
+        folder.newFile("AnyoldFile.db");
+        folder.newFile("2_HASH-WHATEVER.shp");
+        
+        //When
+        List<BreadSlice<String, File>> slices = generator.reload(clock, folder.getRoot(), generator, staleTime);
+        
+        //Then
+        assertEquals("Expected only one slices in the bread bin", 1, slices.size());
+    }
+    
+    @Test
+    public void checkThatShapefileIsLoadedCorrectly() throws IOException {
+        //Given
+        Clock clock = mock(Clock.class);
+        long staleTime = 2000;
+        folder.newFile("2_HASH-WHATEVER.shp");
+        
+        //When
+        BreadSlice<String, File> slice = generator.reload(clock, folder.getRoot(), generator, staleTime).get(0);
+        
+        //Then
+        assertEquals("Expected slice to have the id 2", 2, slice.getId());
+        assertEquals("Expected slice to have the correct hash", "HASH-WHATEVER", slice.getHash());
+        assertEquals("Expected to get the correct workSurface", folder.getRoot(), slice.getWorkSurface());
     }
 }
