@@ -63,7 +63,20 @@ public class BakeryTest {
         
         //Then
         assertSame("Expected to get the clock", clock, obtainedClock);
+    }
+    
+    @Test
+    public void checkCanAddMapSizes() {
+        //Given
+        doReturn(30).when(cache).size();
+        doReturn(77).when(bakingCache).size();
+        Bakery bakery = createBakery();
         
+        //When
+        int sliceCount = bakery.getBreadSliceCount();
+        
+        //Then
+        assertEquals("Expected 107 slice count", 107, sliceCount);
     }
     
     @Test
