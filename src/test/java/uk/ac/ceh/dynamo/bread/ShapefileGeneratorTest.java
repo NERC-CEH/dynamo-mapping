@@ -114,17 +114,18 @@ public class ShapefileGeneratorTest {
         assertEquals("Expected only one slices in the bread bin", 1, slices.size());
     }
     
-    @Test
-    public void checkThatShapefileIsLoadedCorrectly() throws IOException {
+    @Test(timeout=1000L)
+    public void checkThatShapefileIsLoadedCorrectly() throws IOException, BreadException {
         //Given
         Clock clock = mock(Clock.class);
         long staleTime = 2000;
-        folder.newFile("2_HASH-WHATEVER.shp");
+        File shapeFile = folder.newFile("2_HASH-WHATEVER.shp");
         
         //When
         BreadSlice<String, File> slice = generator.reload(clock, folder.getRoot(), generator, staleTime).get(0);
         
         //Then
+        assertEquals("Expected full path", slice.getBaked(), shapeFile.getAbsolutePath());
         assertEquals("Expected slice to have the id 2", 2, slice.getId());
         assertEquals("Expected slice to have the correct hash", "HASH-WHATEVER", slice.getHash());
         assertEquals("Expected to get the correct workSurface", folder.getRoot(), slice.getWorkSurface());

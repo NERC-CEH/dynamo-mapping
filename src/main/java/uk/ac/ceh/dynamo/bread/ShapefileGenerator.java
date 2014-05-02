@@ -77,7 +77,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
             String shapefileName = shapefile.getName();
             String[] nameparts = shapefileName.substring(0, shapefileName.length()-4).split("_");
              
-            slices.add(new BreadSlice<>(    shapefileName, 
+            slices.add(new BreadSlice<>(    shapefile.getAbsolutePath(), 
                                             shapefile.lastModified(), 
                                             Integer.parseInt(nameparts[0]), 
                                             nameparts[1],
