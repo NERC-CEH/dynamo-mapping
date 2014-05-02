@@ -1,24 +1,50 @@
 package uk.ac.ceh.dynamo.bread;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.mockito.Mock;
 import static org.mockito.Mockito.*;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import uk.ac.ceh.dynamo.bread.Bakery.Baker;
 
 /**
  *
  * @author Christopher Johnson
  */
 public class BakeryTest {
+    final static long STALE_TIME = 100;
+    final static long MOULDY_TIME = 1000;
+    
+    Object workSurface;
+    @Mock Clock clock;
+    @Mock DustBin bin;
+    @Mock Oven oven;
+    @Mock Climate climate;
+    @Mock BreadBin breadBin;
+    @Spy Map cache, bakingCache;
+    @Spy ExecutorService breadOvens;
+    
+    @Before
+    public void mockBakeryDependencies() {
+        workSurface = new Object();
+        cache = new HashMap();
+        bakingCache = new HashMap();
+        breadOvens = Executors.newCachedThreadPool();
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     public void checkCanGetDustBin() {
         //Given
-        DustBin bin = mock(DustBin.class);
-        Oven oven = mock(Oven.class);
-        Climate climate = mock(Climate.class);
-        Bakery bakery = new Bakery(null, climate, bin, oven, 100, 1000);
+        Bakery bakery = createBakery();
         
         //When
         DustBin obtainedBin = bakery.getDustbin();
@@ -30,12 +56,7 @@ public class BakeryTest {
     @Test
     public void checkCanGetClock() {
         //Given
-        Clock clock = mock(Clock.class);
-        DustBin bin = mock(DustBin.class);
-        Oven oven = mock(Oven.class);
-        Climate climate = mock(Climate.class);
-        BreadBin breadBin = mock(BreadBin.class);
-        Bakery bakery = new Bakery(null, climate, breadBin, bin, oven, clock, 100, 1000);
+        Bakery bakery = createBakery();
         
         //When
         Clock obtainedClock = bakery.getClock();
@@ -48,13 +69,7 @@ public class BakeryTest {
     @Test
     public void checkCanGetWorkSurface() {
         //Given
-        Object workSurface = new Object();
-        Clock clock = mock(Clock.class);
-        DustBin bin = mock(DustBin.class);
-        Oven oven = mock(Oven.class);
-        Climate climate = mock(Climate.class);
-        BreadBin breadBin = mock(BreadBin.class);
-        Bakery bakery = new Bakery(workSurface, climate, breadBin, bin, oven, clock, 100, 1000);
+        Bakery bakery = createBakery();
 
         //When
         Object obtainedWorkSurface = bakery.getWorkSurface();
@@ -66,19 +81,250 @@ public class BakeryTest {
     @Test
     public void checkThatBreadBinIsFilledWithExistingBreadSlices() {
         //Given
-        Clock clock = mock(Clock.class);
-        DustBin bin = mock(DustBin.class);
-        Oven oven = mock(Oven.class);
-        Climate climate = mock(Climate.class);
-        BreadBin breadBin = mock(BreadBin.class);
-        long staleTime = 100;
         BreadSlice slice = mock(BreadSlice.class);
         
         //When
-        when(oven.reload(clock, null, bin, staleTime)).thenReturn(Arrays.asList(slice));
-        Bakery bakery = new Bakery(null, climate, breadBin, bin, oven, clock, staleTime, 1000);
+        when(oven.reload(clock, workSurface, bin, STALE_TIME)).thenReturn(Arrays.asList(slice));
+        createBakery();
 
         //Then
         verify(breadBin, times(1)).add(slice);
+    }
+    
+    @Test
+    public void checkThatAddingABreadSliceIncrementsID() throws BreadException {
+        //Given
+        Bakery bakery = createBakery();
+        int initialBakeryValue = bakery.getNextId();
+        
+        //When
+        bakery.getData("SomeFresh Ingredients");
+        
+        //Then
+        assertEquals("Expect that the next initalValue will be supplied", bakery.getNextId(), initialBakeryValue + 1);        
+    }
+    
+    @Test
+    public void checkThatReloadingSetsLatestID() {
+        //Given
+        BreadSlice slice = mock(BreadSlice.class);
+        
+        //When
+        when(slice.getId()).thenReturn(504);
+        when(oven.reload(clock, workSurface, bin, STALE_TIME)).thenReturn(Arrays.asList(slice));
+        Bakery bakery = createBakery();
+
+        //Then
+        assertEquals("Expected the bread id to be one higher", bakery.getNextId(), 505);
+    }
+    
+    @Test
+    public void checkFreshIngredientsResultInNewBake() throws BreadException {
+        //Given
+        Bakery bakery = createBakery();
+        String ingredients = "My new ingredients";
+                
+        //When
+        bakery.getData(ingredients);
+        
+        //Then
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(ingredients));
+    }
+    
+    @Test
+    public void checkReBakedIngredientsOnlyBakesOnceWhenNotStale() throws BreadException {
+        //Given
+        Bakery bakery = createBakery();
+        String ingredients = "My new ingredients";
+        bakery.getData(ingredients);
+        
+        //When
+        bakery.getData(ingredients);
+        
+        //Then
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(ingredients));
+        verify(breadOvens, never()).submit(any(Baker.class));
+    }
+    
+    @Test
+    public void checkDifferentBakeResultsInTwoBakes() throws BreadException {
+        //Given
+        Bakery bakery = createBakery();
+        String firstIngredients = "My new ingredients";
+        String secondIngredients = "Anothor set of ingredients";
+        
+        //When
+        bakery.getData(firstIngredients);
+        bakery.getData(secondIngredients);
+        
+        //Then
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(firstIngredients));
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(secondIngredients));
+    }
+    
+    @Test
+    public void checkStaleDataResultsInReBake() throws BreadException, InterruptedException {
+        //Given
+        String ingredients = "My Ingredients";
+        
+        when(clock.getTimeInMillis()).thenReturn(0L);
+        when(oven.cook(any(BreadSlice.class), eq(ingredients)))
+                .thenReturn("firstBake")
+                .thenReturn("secondBake");
+        
+        Bakery bakery = createBakery();
+        
+        //When
+        Object firstRequest = bakery.getData(ingredients);
+        when(clock.getTimeInMillis()).thenReturn(STALE_TIME + 1);
+        Object secondRequest = bakery.getData(ingredients);
+        
+        //Then
+        assertSame("Expected the stale bake to yield the same as the fresh bake", firstRequest, secondRequest);
+        verify(breadOvens, times(1)).submit(any(Baker.class));
+        verify(bakingCache, times(1)).put(any(), any());
+    }
+    
+    @Test
+    public void checkStaleDataRequestIncreasesId() throws BreadException {
+        //Given
+        String ingredients = "My Ingredients";
+        
+        when(clock.getTimeInMillis()).thenReturn(0L);
+        when(oven.cook(any(BreadSlice.class), eq(ingredients)))
+                .thenReturn("firstBake")
+                .thenReturn("secondBake");
+        
+        Bakery bakery = createBakery();
+        int initialBakeryValue = bakery.getNextId();
+        
+        //When
+        bakery.getData(ingredients);
+        when(clock.getTimeInMillis()).thenReturn(STALE_TIME + 1); //first request is now stale
+        bakery.getData(ingredients);
+        
+        //Then
+        assertEquals("Expected the initial baked id to have gone up by two", initialBakeryValue + 2, bakery.getNextId());
+    }
+    
+    @Test
+    public void checkThatMoudlyDataIsRemoved() throws BreadException {
+        //Given                
+        Bakery bakery = createBakery();
+        
+        BreadSlice oldSlice = mock(BreadSlice.class);
+        when(oldSlice.getHash()).thenReturn("old key");
+        
+        //When
+        when(clock.getTimeInMillis()).thenReturn(7000L);
+        when(breadBin.removeMouldy(7000L)).thenReturn(Arrays.asList(oldSlice));
+        bakery.getData("Some data");
+        
+        //Then
+        verify(cache, times(1)).remove("old key");
+        verify(oldSlice, times(1)).markAsMouldy();
+    }
+    
+    @Test
+    public void checkThatMoudlyDataIsRemovedOnStartup() {
+        //Given
+        BreadSlice oldSlice = mock(BreadSlice.class);
+        when(clock.getTimeInMillis()).thenReturn(7000L);
+        when(oldSlice.getHash()).thenReturn("old key");
+        when(breadBin.removeMouldy(7000L)).thenReturn(Arrays.asList(oldSlice));
+        
+        //When
+        createBakery();
+        
+        //Then
+        verify(cache, times(1)).remove("old key");
+        verify(oldSlice, times(1)).markAsMouldy();
+    }
+    
+    @Test
+    public void checkThatExistingDataInTheOvenIsAdded() {
+        //Given
+        BreadSlice existingSlice = mock(BreadSlice.class);
+        when(oven.reload(clock, workSurface, bin, STALE_TIME)).thenReturn(Arrays.asList(existingSlice));
+        
+        //When
+        createBakery();
+        
+        //Then
+        verify(cache, times(1)).put(existingSlice.getHash(), existingSlice);
+        verify(breadBin, times(1)).add(existingSlice);
+    }
+    
+    @Test
+    public void checkThatASuccessfulBackgroundBakeReplacesStaleData() throws BreadException, InterruptedException {
+        //Given
+        String ingredients = "My Ingredients";
+        when(clock.getTimeInMillis()).thenReturn(0L);
+        when(oven.cook(any(BreadSlice.class), eq(ingredients)))
+                .thenReturn("firstBake")
+                .thenReturn("secondBake");
+        
+        Bakery bakery = createBakery();
+        
+        //When
+        bakery.getData(ingredients);
+        when(clock.getTimeInMillis()).thenReturn(STALE_TIME + 1);
+        bakery.getData(ingredients);
+
+        breadOvens.shutdown();
+        breadOvens.awaitTermination(1, TimeUnit.SECONDS); //plenty of time for background baking to finish
+        
+        //Then
+        verify(breadBin, times(2)).add(any(BreadSlice.class)); //Two slices have been addded
+        verify(breadBin, times(1)).remove(any(BreadSlice.class)); //Old slice removed
+        verify(cache, times(2)).put(any(String.class), any(BreadSlice.class)); //cache has been updated
+        verify(bakingCache, times(1)).remove(any(String.class)); //Background baking cleaned up
+    }
+    
+    @Test
+    public void checkThatAFailedBackgroundBakeDoesNotReplaceStaleData() throws BreadException, InterruptedException {
+        //Given
+        String ingredients = "My Ingredients";
+        when(clock.getTimeInMillis()).thenReturn(0L);
+        when(oven.cook(any(BreadSlice.class), eq(ingredients)))
+                .thenReturn("firstBake")
+                .thenThrow(new BreadException("Forcing bake failure"));
+        
+        Bakery bakery = createBakery();
+        
+        //When
+        bakery.getData(ingredients);
+        when(clock.getTimeInMillis()).thenReturn(STALE_TIME + 1);
+        bakery.getData(ingredients);
+
+        breadOvens.shutdown();
+        breadOvens.awaitTermination(1, TimeUnit.SECONDS); //plenty of time for background baking to finish
+        
+        //Then
+        verify(breadBin, times(1)).add(any(BreadSlice.class));                  //Only the first slice was added to the bread bin
+        verify(breadBin, never()).remove(any(BreadSlice.class));                //Nothing was taken out
+        verify(cache, times(1)).put(any(String.class), any(BreadSlice.class));  //Only one element was put into the cache
+        verify(bakingCache, times(1)).remove(any(String.class));                //The Baking cache was cleaned up
+    }
+    
+    @Test
+    public void checkTheBakingCacheIsUsedIfNoElementCurrentlyExists() throws BreadException {
+        //Given
+        String ingredients = "My Ingredients";
+        String ingredientsSha1 = "67c06865eafa56e744142175c8a19104a79e0ff0";
+        Bakery bakery = createBakery();
+        BreadSlice slice = new BreadSlice("PreBakedValue", 0, 0, ingredientsSha1, STALE_TIME, clock, workSurface, bin);
+        bakingCache.put(ingredientsSha1, slice);
+        
+        //When
+        Object bakeryData = bakery.getData(ingredients);
+        
+        //Then
+        assertEquals("Expected to get the pre baked value out the bakery", "PreBakedValue", bakeryData);
+        
+    }
+    
+    private Bakery createBakery() {
+        return new Bakery(workSurface, climate, breadBin, bin, oven, clock, STALE_TIME, MOULDY_TIME, cache, bakingCache, breadOvens);
     }
 }

@@ -31,7 +31,7 @@ public class BreadBin<T, W> {
      * Constructs a bread bin with a given backing list of bread slices
      * @param breadSlices 
      */
-    public BreadBin(Deque<BreadSlice<T,W>> breadSlices) {
+    protected BreadBin(Deque<BreadSlice<T,W>> breadSlices) {
         this.breadSlices = breadSlices;
     }
 

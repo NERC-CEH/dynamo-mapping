@@ -52,34 +52,47 @@ public class Bakery<T, W> {
      * Construct a Bakery in a given scrachpad. If the scratch pad already contains
      * shapefiles, these will be processed in to bread slices and then be hosted
      * as long as they are not stale or mouldy.
+     */
+    public Bakery(W workSurface, Climate climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime) {
+        this(workSurface, climate, breadBin, dustbin, oven, clock, staleTime, bestBeforeTime, new HashMap<String, BreadSlice<T,W>>(), new HashMap<String, BreadSlice<T,W>>(), Executors.newCachedThreadPool());
+    }
+    
+    /**
+     * Construct a Bakery in a given scrachpad. If the scratch pad already contains
+     * shapefiles, these will be processed in to bread slices and then be hosted
+     * as long as they are not stale or mouldy.
      * 
+     * @param workSurface a surface which can be used by bakers as a temp location
      * @param climate the climate which dictates if a bread slice is mouldy
-     * @param scratchPad the location to store shapefiles to
      * @param breadBin the breadBin implementation will keeps track of breadslices 
      *  which are in action
-     * @param generator the shape file generator which creates shape files
-     * @param remover the shape file deleter which removes shapefiles under the
-     *  bakers instruction
+     * @param dustbin an implementation of a bin, dead slices will be thrown away
+     *  if they are mouldy and not in use or replace by fresh slices
+     * @param oven the oven logic which dictates how ingredients get baked
      * @param clock a clock representing the current time
      * @param staleTime the first time in which a bread slice will become stale
      *  after it has been baked
      * @param bestBeforeTime the time which when multipled by the current climate
      *  dictates if a bread slice is mouldy
+     * @param cache An implementation of a Map which will be used for storing breadslices
+     *  against there hash key
+     * @param bakingCache An implementation of a Map which will be used for storing 
+     *  the breadslices which are currently in a bread oven
+     * @param breadOvens an executer which Baker instances will be submitted to
      */
-    public Bakery(W workSurface, Climate climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime) {
+    protected Bakery(W workSurface, Climate climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime, Map<String, BreadSlice<T,W>> cache, Map<String, BreadSlice<T,W>> bakingCache, ExecutorService breadOvens) {
         this.workSurface = workSurface;
         this.oven = oven;
         this.breadBin = breadBin;
         this.dustbin = dustbin;
         this.breadSliceId = 0;
-        this.cache = new HashMap<>();
-        this.bakingCache = new HashMap<>();
+        this.cache = cache;
+        this.bakingCache = bakingCache;
         this.clock = clock;
         this.staleTime = staleTime;
         this.bestBeforeTime = bestBeforeTime;
         this.climate = climate;
-        
-        this.breadOvens = Executors.newCachedThreadPool();
+        this.breadOvens = breadOvens;
         
          //The oven may contain existing built caches, we can bring this 
         //baker back into action based upon the data there.
@@ -142,6 +155,14 @@ public class Bakery<T, W> {
     }
     
     /**
+     * Obtain the next id which will be assigned to a bread slice
+     * @return the next id for a bread slice
+     */
+    public int getNextId() {
+        return breadSliceId;
+    }
+    
+    /**
      * Returns the dustbin which is used by this bakery. This is used to throw 
      * away old slices of bread.
      * @return This bakery's dust bin
@@ -167,7 +188,7 @@ public class Bakery<T, W> {
     }
     
     @AllArgsConstructor
-    private class Baker implements Runnable {
+    protected class Baker implements Runnable {
         private final BreadSlice<T, W> slice;
         private final String sql;
         
