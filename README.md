@@ -121,6 +121,46 @@ A fluent api **GridMapImageBuilder** is also available to simplify this task obt
                           .nationalExtent("or the nationalExtent")
                           .build();
 
+# Bread - Or How I Learned to stop worrying and love the cache
+
+Bread is a double buffered caching mechanism which has been designed for caching cuts (or bread slices) of data from a slow preparation source. For example, cache an sql query to a shapefile (see uk.ac.ceh.dynamo.bread.ShapefileGenerator)
+
+To use, create an instance of a Bakery. If you are planning on caching spatial queries to shapefiles in your dynamo mapping web application, then you would create a spring bean Bakery in your ApplicationContext:
+
+        @Bean
+        public ShapefileBakery shapefileBakery() {
+            //Create a shapefile generator, this will back onto an installation of ogr2ogr
+            ShapefileGenerator shapefileGenerator = new ShapefileGenerator(
+                ogr2ogrLocation,
+                ogr2ogrConnectionString,
+                maximumAmountOfSimultaneousConnections);
+
+            return new ShapefileBakery(
+                new File("location/to/cache/directory"),
+                new BreadSliceCountClimateMeter(512),    //A climate which scaled with the slices of bread
+                shapefileGenerator,
+                30000,                                   //Time in miliseconds for bread to go stale
+                150000                                   //Time in miliseconds that in the best climate, bread will go mouldy
+            );
+        }
+
+Simply inject this bean into your Dynamo Mapping controller and when preparing your mapfile template, call the getData method on your bakery. The result of this call will be a shapefile on disk with the data prepared from your sql statement.
+
+Similar sql queries will return the same shapefile until that shapefile has been either:
+
+1. Regenerated because it was requested after it went stale
+2. Went mouldy and was not fix for consumption
+
+Underlying all of this is the concept of a bread slice. A bread slice is a wrapper around the query (known generically as ingredients). At any time a bread slice can be in any one of four states.
+
+1. Conceived of but not yet baked.
+2. Freshly baked (i.e. not yet stale)
+3. Gone stale, a given amount of time has elapsed since the shapefile was populated. We can still serve from this bread slice but we will also request a fresh slice to be baked in the background
+4. Mouldy. The bread slice is not fit for consumption. This will be because either the time has elapsed in which it takes for this slice of bread to go mouldy in the best climate or the current climate is not suitable for keeping bread. In any case, this slice of bread will be scheduled for deletion.
+
+The default bakery is coded to be thread safe. Like any caching mechanism, Bread works best with lots of similar requests for data being made.
+
+The code base is well documented with Javadoc. If you which to investigate the inner workings in more depth I would recommend beginning at uk.ac.ceh.dynamo.bread.Bakery
 
 ## Contributors
 
