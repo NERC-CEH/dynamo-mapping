@@ -11,7 +11,7 @@ import java.io.File;
  * @author Christopher Johnson
  */
 public class ShapefileBakery extends Bakery<String, File> {
-    public ShapefileBakery(File workSurface, Climate climate, ShapefileGenerator generator, long staleTime, long rottenTime) {
+    public ShapefileBakery(File workSurface, ClimateMeter climate, ShapefileGenerator generator, long staleTime, long rottenTime) {
         super(workSurface, climate, generator, generator, staleTime, rottenTime);
     }
 }

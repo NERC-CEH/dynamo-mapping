@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class UpdatableClimate implements Climate {
+public class UpdatableClimateMeter implements ClimateMeter {
     private double currentClimate = 1d;
 
     @Override

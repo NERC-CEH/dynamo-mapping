@@ -34,7 +34,7 @@ public class Bakery<T, W> {
     private final BreadBin<T, W> breadBin;
     private final Map<String, BreadSlice<T, W>> cache;
     private final Map<String, BreadSlice<T, W>> bakingCache;
-    private final Climate<T,W> climate;
+    private final ClimateMeter<T,W> climate;
     private final Clock clock;
     private final long staleTime, bestBeforeTime;
     
@@ -44,7 +44,7 @@ public class Bakery<T, W> {
      * Constructs a Baker with a default LinkedListBreadBin, ShapefileRemover
      * and a system clock
      */
-    public Bakery(W workSurface, Climate<T,W> climate, DustBin<W> dustbin, Oven<T, W> oven, long staleTime, long rottenTime) {
+    public Bakery(W workSurface, ClimateMeter<T,W> climate, DustBin<W> dustbin, Oven<T, W> oven, long staleTime, long rottenTime) {
         this(workSurface, climate, new BreadBin<T, W>(), dustbin, oven, new SystemClock(), staleTime, rottenTime);
     }
     
@@ -53,7 +53,7 @@ public class Bakery<T, W> {
      * shapefiles, these will be processed in to bread slices and then be hosted
      * as long as they are not stale or mouldy.
      */
-    public Bakery(W workSurface, Climate<T,W> climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime) {
+    public Bakery(W workSurface, ClimateMeter<T,W> climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime) {
         this(workSurface, climate, breadBin, dustbin, oven, clock, staleTime, bestBeforeTime, new HashMap<String, BreadSlice<T,W>>(), new HashMap<String, BreadSlice<T,W>>(), Executors.newCachedThreadPool());
     }
     
@@ -80,7 +80,7 @@ public class Bakery<T, W> {
      *  the breadslices which are currently in a bread oven
      * @param breadOvens an executer which Baker instances will be submitted to
      */
-    protected Bakery(W workSurface, Climate<T,W> climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime, Map<String, BreadSlice<T,W>> cache, Map<String, BreadSlice<T,W>> bakingCache, ExecutorService breadOvens) {
+    protected Bakery(W workSurface, ClimateMeter<T,W> climate, BreadBin<T, W> breadBin, DustBin<W> dustbin, Oven<T, W> oven, Clock clock, long staleTime, long bestBeforeTime, Map<String, BreadSlice<T,W>> cache, Map<String, BreadSlice<T,W>> bakingCache, ExecutorService breadOvens) {
         this.workSurface = workSurface;
         this.oven = oven;
         this.breadBin = breadBin;

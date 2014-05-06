@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Christopher Johnson
  */
-public class BreadSliceCountClimateTest {
+public class BreadSliceCountClimateMeterTest {
     @Mock Bakery bakery;
     
     @Before
@@ -21,7 +21,7 @@ public class BreadSliceCountClimateTest {
     @Test
     public void checkThatClimateReturns0WhenAtFullUsage() {
         //Given
-        BreadSliceCountClimate climate = new BreadSliceCountClimate(5000);
+        BreadSliceCountClimateMeter climate = new BreadSliceCountClimateMeter(5000);
         
         //When
         when(bakery.getBreadSliceCount()).thenReturn(5000);
@@ -34,7 +34,7 @@ public class BreadSliceCountClimateTest {
     @Test
     public void checkThatClimateReturns0WhenBeyondFullUsage() {
         //Given
-        BreadSliceCountClimate climate = new BreadSliceCountClimate(5000);
+        BreadSliceCountClimateMeter climate = new BreadSliceCountClimateMeter(5000);
         
         //When
         when(bakery.getBreadSliceCount()).thenReturn(10000);
@@ -47,7 +47,7 @@ public class BreadSliceCountClimateTest {
     @Test
     public void checkThatClimateReturns1WhenAtZeroUsage() {
         //Given
-        BreadSliceCountClimate climate = new BreadSliceCountClimate(5000);
+        BreadSliceCountClimateMeter climate = new BreadSliceCountClimateMeter(5000);
         
         //When
         when(bakery.getBreadSliceCount()).thenReturn(0);

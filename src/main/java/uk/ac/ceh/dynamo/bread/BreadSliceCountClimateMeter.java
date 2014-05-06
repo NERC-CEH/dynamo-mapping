@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
  * @author Christopher Johnson
  */
 @AllArgsConstructor
-public class BreadSliceCountClimate implements Climate {
+public class BreadSliceCountClimateMeter implements ClimateMeter {
     private final int maxBreadSlices;
 
     /**

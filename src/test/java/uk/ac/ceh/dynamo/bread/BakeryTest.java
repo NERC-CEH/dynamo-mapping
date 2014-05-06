@@ -27,7 +27,7 @@ public class BakeryTest {
     @Mock Clock clock;
     @Mock DustBin bin;
     @Mock Oven oven;
-    @Mock Climate climate;
+    @Mock ClimateMeter climate;
     @Mock BreadBin breadBin;
     @Spy Map cache, bakingCache;
     @Spy ExecutorService breadOvens;
