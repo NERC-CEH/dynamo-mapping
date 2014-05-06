@@ -66,6 +66,18 @@ public class BakeryTest {
     }
     
     @Test
+    public void checkThatCurrentClimateIsPoweredByClimateMeter() {
+        //Given
+        Bakery bakery = createBakery();
+        
+        //When
+        when(climate.getCurrentClimate(bakery)).thenReturn(0.3);
+        
+        //Then
+        assertEquals("Expected 0.3 as the current bakery climate", 0.3, bakery.getCurrentClimate(), 0);
+    }
+    
+    @Test
     public void checkCanAddMapSizes() {
         //Given
         doReturn(30).when(cache).size();

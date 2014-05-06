@@ -174,6 +174,14 @@ public class Bakery<T, W> {
     }
     
     /**
+     * Gets the current climate for this bakery given the specified
+     * climate meter
+     */
+    public double getCurrentClimate() {
+        return climate.getCurrentClimate(this);
+    }
+    
+    /**
      * Returns the dustbin which is used by this bakery. This is used to throw 
      * away old slices of bread.
      * @return This bakery's dust bin
@@ -260,7 +268,7 @@ public class Bakery<T, W> {
      * delete them when the usage hits zero
      */
     private void cleanOutBreadBin() {
-        long earliestBakeTime = clock.getTimeInMillis() - (long)(bestBeforeTime * climate.getCurrentClimate(this));
+        long earliestBakeTime = clock.getTimeInMillis() - (long)(bestBeforeTime * getCurrentClimate());
         for(BreadSlice slice: breadBin.removeMouldy(earliestBakeTime)) {
             slice.markAsMouldy();
             cache.remove(slice.getHash());
