@@ -2,7 +2,7 @@
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <version>9</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -10,7 +10,7 @@
     <artifactId>dynamo-mapping</artifactId>
     <packaging>jar</packaging>
     <name>Dynamo Mapping</name>
-    <version>0.7-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <description>A Spring MVC plugin for creating dynamic MapServer maps with freemarker templates</description>
     <url>https://github.com/NERC-CEH</url>
     
