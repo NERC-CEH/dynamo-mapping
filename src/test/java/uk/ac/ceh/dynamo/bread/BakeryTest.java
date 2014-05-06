@@ -1,11 +1,17 @@
 package uk.ac.ceh.dynamo.bread;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -346,7 +352,92 @@ public class BakeryTest {
         
         //Then
         assertEquals("Expected to get the pre baked value out the bakery", "PreBakedValue", bakeryData);
+    }
+    
+    @Test
+    public void checkThatBakeryReturnsSha1AsMixName() {
+        //Given
+        String ingredients = "My Ingredients";
+        Bakery bakery = createBakery();
         
+        //When
+        String mixName = bakery.getMixName(ingredients);
+        
+        //Then
+        assertEquals("Expected the sha1 hash for the mixName", "67c06865eafa56e744142175c8a19104a79e0ff0", mixName);
+    }
+    
+    @Test
+    public void checkThatBakeryCanHandle1000SimultaneousRequests() throws InterruptedException, ExecutionException, BreadException {
+        //Given
+        ExecutorService executor = Executors.newCachedThreadPool();
+        String ingredients = "data";
+        String bakedData = "my baked data";
+        Bakery bakery = createBakery();
+        when(oven.cook(any(BreadSlice.class), eq(ingredients))).thenReturn(bakedData);
+        
+        //When
+        List<Future> executed = new ArrayList<>();
+        for(int i=0; i<1000; i++) {
+            executed.add(executor.submit(new BreadSliceRequestThread(bakery, ingredients)));
+        }
+        
+        //Then
+        for(Future request: executed) {
+            assertEquals("Expected the correct output", bakedData, request.get());
+        }
+        
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(ingredients));
+    }
+    
+    @Test
+    public void checkThatCookedDataDoesNotGetReturnedFromAnotherQuery() throws InterruptedException, ExecutionException, BreadException {
+        //Given
+        ExecutorService executor = Executors.newCachedThreadPool();
+        String ingredients1 = "data";
+        String ingredients2 = "other data";
+        String bakedData1 = "my baked data";
+        String bakedData2 = "other datas baked data";
+        
+        Bakery bakery = createBakery();
+        when(oven.cook(any(BreadSlice.class), eq(ingredients1))).thenReturn(bakedData1);
+        when(oven.cook(any(BreadSlice.class), eq(ingredients2))).thenReturn(bakedData2);
+        
+        //When
+        List<Future> executed1 = new ArrayList<>();
+        List<Future> executed2 = new ArrayList<>();
+        for(int i=0; i<1000; i++) {
+            executed1.add(executor.submit(new BreadSliceRequestThread(bakery, ingredients1)));
+            executed2.add(executor.submit(new BreadSliceRequestThread(bakery, ingredients2)));
+        }
+        
+        //Then
+        for(Future request: executed1) {
+            assertEquals("Expected the correct output", bakedData1, request.get());
+        }
+        
+        for(Future request: executed2) {
+            assertEquals("Expected the correct output", bakedData2, request.get());    
+        }
+        
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(ingredients1));
+        verify(oven, times(1)).cook(any(BreadSlice.class), eq(ingredients2));
+    }
+    
+    @AllArgsConstructor
+    public static class BreadSliceRequestThread<T, I> implements Callable {
+        private Bakery<T, I, ?> bakery;
+        private I data;
+        
+        @Override
+        public T call() throws BreadException {
+            try {
+                return bakery.getData(data);
+            }
+            finally {
+                BreadSlice.finishedEating();
+            }
+        }
     }
     
     private Bakery createBakery() {
