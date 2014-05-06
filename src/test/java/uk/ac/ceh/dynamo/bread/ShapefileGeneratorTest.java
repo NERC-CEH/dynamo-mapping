@@ -46,7 +46,7 @@ public class ShapefileGeneratorTest {
         File workSurface = folder.newFolder("folder");
         when(slice.getWorkSurface()).thenReturn(workSurface);
         when(slice.getId()).thenReturn(0);
-        when(slice.getHash()).thenReturn("HASH");
+        when(slice.getMixName()).thenReturn("HASH");
         String sql = "my sql statement";
         
         //When
@@ -68,7 +68,7 @@ public class ShapefileGeneratorTest {
         BreadSlice<String, File> slice = mock(BreadSlice.class);
         when(slice.getWorkSurface()).thenReturn(folder.getRoot());
         when(slice.getId()).thenReturn(0);
-        when(slice.getHash()).thenReturn("HASH");
+        when(slice.getMixName()).thenReturn("HASH");
         
         remover = spy(Executors.newCachedThreadPool());
         generator = new ShapefileGenerator(OGR2OGR, CONNECTION_STRING, semaphore, remover);
@@ -127,7 +127,7 @@ public class ShapefileGeneratorTest {
         //Then
         assertEquals("Expected full path", slice.getBaked(), shapeFile.getAbsolutePath());
         assertEquals("Expected slice to have the id 2", 2, slice.getId());
-        assertEquals("Expected slice to have the correct hash", "HASH-WHATEVER", slice.getHash());
+        assertEquals("Expected slice to have the correct hash", "HASH-WHATEVER", slice.getMixName());
         assertEquals("Expected to get the correct workSurface", folder.getRoot(), slice.getWorkSurface());
     }
 }

@@ -8,7 +8,7 @@ import java.util.List;
  * bake a slice of bread.
  * @author Christopher Johnson
  */
-public interface Oven<T, W> {
+public interface Oven<T, I, W> {
     /**
      * Obtain a list of BreadSlices which are already present on the work surface
      * This method will be called by a bakery when it is first constructed to get
@@ -37,5 +37,5 @@ public interface Oven<T, W> {
      * @return An instance of T which was built from ingredients
      * @throws BreadException if it was not possible to cook the ingredients
      */
-    T cook(BreadSlice<T, W> slice, String ingredients) throws BreadException;
+    T cook(BreadSlice<T, W> slice, I ingredients) throws BreadException;
 }

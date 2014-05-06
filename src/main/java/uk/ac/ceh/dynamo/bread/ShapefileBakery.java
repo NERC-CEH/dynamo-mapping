@@ -10,8 +10,8 @@ import java.io.File;
  * make that slice of bread mouldy.
  * @author Christopher Johnson
  */
-public class ShapefileBakery extends Bakery<String, File> {
-    public ShapefileBakery(File workSurface, ClimateMeter climate, ShapefileGenerator generator, long staleTime, long rottenTime) {
+public class ShapefileBakery extends Bakery<String, String, File> {
+    public ShapefileBakery(File workSurface, ClimateMeter<String, String, File> climate, ShapefileGenerator generator, long staleTime, long rottenTime) {
         super(workSurface, climate, generator, generator, staleTime, rottenTime);
     }
 }

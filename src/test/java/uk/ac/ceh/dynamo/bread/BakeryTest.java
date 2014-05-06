@@ -238,7 +238,7 @@ public class BakeryTest {
         Bakery bakery = createBakery();
         
         BreadSlice oldSlice = mock(BreadSlice.class);
-        when(oldSlice.getHash()).thenReturn("old key");
+        when(oldSlice.getMixName()).thenReturn("old key");
         
         //When
         when(clock.getTimeInMillis()).thenReturn(7000L);
@@ -255,7 +255,7 @@ public class BakeryTest {
         //Given
         BreadSlice oldSlice = mock(BreadSlice.class);
         when(clock.getTimeInMillis()).thenReturn(7000L);
-        when(oldSlice.getHash()).thenReturn("old key");
+        when(oldSlice.getMixName()).thenReturn("old key");
         when(breadBin.removeMouldy(7000L)).thenReturn(Arrays.asList(oldSlice));
         
         //When
@@ -276,7 +276,7 @@ public class BakeryTest {
         createBakery();
         
         //Then
-        verify(cache, times(1)).put(existingSlice.getHash(), existingSlice);
+        verify(cache, times(1)).put(existingSlice.getMixName(), existingSlice);
         verify(breadBin, times(1)).add(existingSlice);
     }
     

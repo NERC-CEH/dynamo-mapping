@@ -309,7 +309,7 @@ public class BreadSliceTest {
         BreadSlice<String, Void> slice = new BreadSlice<>("content1", 200L, 1, "SLICE-HASH1", 500, clock, null, bin);
         
         //When
-        String hash = slice.getHash();
+        String hash = slice.getMixName();
         
         //Then
         assertEquals("Expect that hash to be hash1", hash, "SLICE-HASH1");

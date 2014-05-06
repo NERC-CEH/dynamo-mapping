@@ -12,7 +12,7 @@ package uk.ac.ceh.dynamo.bread;
  * high.
  * @author Christopher Johnson
  */
-public interface ClimateMeter<T,W> {
+public interface ClimateMeter<T,I,W> {
     /**
      * Returns a value between 0 and 1. Where 0 represents the worst type of 
      * climate, so bad that once a bread slice has been baked it will instantly 
@@ -20,5 +20,5 @@ public interface ClimateMeter<T,W> {
      * @param bakery the bakery to determine the climate of
      * @return The current climate in which a given baker is operating.
      */
-    double getCurrentClimate(Bakery<T, W> bakery);
+    double getCurrentClimate(Bakery<T, I, W> bakery);
 }

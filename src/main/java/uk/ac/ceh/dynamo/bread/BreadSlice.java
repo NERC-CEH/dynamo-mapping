@@ -29,7 +29,7 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
     };
     
     private final int id;
-    private final String queryHash;
+    private final String mixName;
     private final AtomicInteger useCounter;
     private long bakedTime;
     private final CountDownLatch latch;
@@ -48,14 +48,15 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
      * 
      * Use the #setBakedFile() for setting the baked file afterwards
      * @param id This breadslices unique id
-     * @param queryHash The sha1 hash of the query which this bread slice will represent
+     * @param mixName The bakery's mixName for the ingredients which have been put into 
+     *  this breadslice. The default bakery implementation is the sha1 hash of the query.
      * @param staleTime The time it takes (after baking) for this bread slice to become stale
      * @param clock a clock for measuring time
      * @param remover the shapefile remover for deleteing the full set of shapefile parts
      */
     public BreadSlice(int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<W> dustBin) {
         this.id = id;
-        this.queryHash = queryHash;
+        this.mixName = queryHash;
         this.dustBin = dustBin;
         this.staleTime = staleTime;
         this.clock = clock;
@@ -72,9 +73,9 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
      * @param clock A clock to use for obtaining time
      * @param remover The remover to use for removing this BreadSlice when it is not needed
      */
-    public BreadSlice(T preBaked, long bakedTime, int id, String queryHash, long staleTime, Clock clock, W workSurface, DustBin<W> dustBin) {
+    public BreadSlice(T preBaked, long bakedTime, int id, String mixName, long staleTime, Clock clock, W workSurface, DustBin<W> dustBin) {
         this.id = id;
-        this.queryHash = queryHash;
+        this.mixName = mixName;
         this.dustBin = dustBin;
         this.staleTime = staleTime;
         this.clock = clock;
@@ -89,10 +90,10 @@ public class BreadSlice<T, W> implements Comparable<BreadSlice<T, W>> {
     }
     
     /**
-     * @return the sha1 hash of the query which this bread slice represents
+     * @return the mix name of the ingredients which this bread slice represents
      */
-    public String getHash() {
-        return queryHash;
+    public String getMixName() {
+        return mixName;
     }
     
     /**

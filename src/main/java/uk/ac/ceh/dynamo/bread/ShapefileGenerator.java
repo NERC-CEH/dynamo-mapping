@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
  * 
  * @author Christopher Johnson
  */
-public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
+public class ShapefileGenerator implements DustBin<File>, Oven<String, String, File> {
     private final ExecutorService remover;
     private final Semaphore semaphore;
     private final String ogr2ogr, connectionString;
@@ -54,9 +54,9 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
         remover.submit(new Runnable() {
             @Override
             public void run() {
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shp").delete();
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shx").delete();
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".dbf").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shp").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shx").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".dbf").delete();
             }
         });
     }
@@ -99,7 +99,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, File> {
      */
     @Override
     public String cook(BreadSlice<String, File> slice, String sql) throws BreadException {
-        File output = new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getHash() + ".shp");
+        File output = new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shp");
         try {
             semaphore.acquire();
             try {
