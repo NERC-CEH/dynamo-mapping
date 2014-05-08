@@ -29,7 +29,7 @@ In order to enable to view resolver, you must register the **MapServerViewResolv
 
     @Bean
     public MapServerViewResolver configureMapServerViewResolver() throws IOException {
-        return new MapServerViewResolver(new File("location/of/map/files"))), new URL("http://localhost:9000/fcgi-bin/mapserv.exe")));
+        return new MapServerViewResolver(httpClient, new File("location/of/map/files"))), new URL("http://localhost:9000/fcgi-bin/mapserv.exe")));
     }
 
 I would recommend that you enable fcgi on your mapserver. If you are using the [ms4w](http://www.maptools.org/ms4w/) then details on how to set this up can be found [here](http://www.maptools.org/ms4w/index.phtml?page=README_INSTALL.html#f-fastcgi)
