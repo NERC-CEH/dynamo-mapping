@@ -4,9 +4,9 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.util.Locale;
-import org.springframework.web.servlet.View;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.web.servlet.ViewResolver;
 
 /**
@@ -16,13 +16,15 @@ import org.springframework.web.servlet.ViewResolver;
  * @author Christopher Johnson
  */
 public class MapServerViewResolver implements ViewResolver {
-    private final URL mapServerURL;
+    private final CloseableHttpClient httpClient;
+    private final URI mapServerURI;
     private final Configuration config;
     private final File templateDirectory;
     
-    public MapServerViewResolver(File templateDirectory, URL mapServerURL) throws IOException {
+    public MapServerViewResolver(CloseableHttpClient httpClient, File templateDirectory, URI mapServerURI) throws IOException {
         this.config = new Configuration();
-        this.mapServerURL = mapServerURL;
+        this.httpClient = httpClient;
+        this.mapServerURI = mapServerURI;
         this.templateDirectory = templateDirectory;
         config.setDirectoryForTemplateLoading(templateDirectory);
     }
@@ -32,7 +34,7 @@ public class MapServerViewResolver implements ViewResolver {
         File template = new File(templateDirectory, viewName);
         if(template.isFile() && template.exists()) { 
             Template mapFileTemplate = config.getTemplate(viewName);
-            return new MapServerView(mapServerURL, mapFileTemplate, template.getParentFile());
+            return new MapServerView(httpClient, mapServerURI, mapFileTemplate, template.getParentFile());
         }
         else {
             return null;

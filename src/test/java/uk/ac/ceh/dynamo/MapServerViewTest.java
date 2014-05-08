@@ -1,29 +1,29 @@
 package uk.ac.ceh.dynamo;
 
 import freemarker.template.Template;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLDecoder;
-import java.net.URLStreamHandler;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.Matchers.*;
 /**
  *
@@ -38,7 +38,7 @@ public class MapServerViewTest {
     @Test
     public void checkThatTemplateIsExecuted() throws Exception {
         //Given
-        URL url = getURLWhichReturns("Any old gibberish", new ByteArrayOutputStream());
+        CloseableHttpClient httpClient = getURLWhichReturns("Any old gibberish", "image/png");
         
         Template template = mock(Template.class);
                 
@@ -51,7 +51,7 @@ public class MapServerViewTest {
         Map<String, ?> templateModel = new HashMap<>();
         
         //When
-        MapServerView view = new MapServerView(url, template, testFolder.getRoot());
+        MapServerView view = new MapServerView(httpClient, null, template, testFolder.getRoot());
         view.render(templateModel, request, response);
         
         //Then        
@@ -61,8 +61,7 @@ public class MapServerViewTest {
     @Test
     public void checkThatTemplateIsCreatedInTheCorrectPlace() throws Exception {
         //Given
-        ByteArrayOutputStream mapServerOutput = new ByteArrayOutputStream();
-        URL url = getURLWhichReturns("Any old gibberish", mapServerOutput);
+        CloseableHttpClient httpClient = getURLWhichReturns("Any old gibberish", "image/png");
         
         Template template = mock(Template.class);
                 
@@ -74,12 +73,16 @@ public class MapServerViewTest {
         Map<String, ?> templateModel = new HashMap<>();
         
         //When
-        MapServerView view = new MapServerView(url, template, testFolder.getRoot());
+        MapServerView view = new MapServerView(httpClient, null, template, testFolder.getRoot());
         view.render(templateModel, request, response);
         
         //Then
-        Map<String, String> mapServerRequestQuery = parseQuery(mapServerOutput.toString());
+        ArgumentCaptor<HttpPost> argument = ArgumentCaptor.forClass(HttpPost.class);
+        verify(httpClient).execute(argument.capture());
+        ServletOutputStreamSaver outputStream = new ServletOutputStreamSaver();
+        argument.getValue().getEntity().writeTo(outputStream);
         
+        Map<String, String> mapServerRequestQuery = parseQuery(outputStream.toString());
         assertSame("Expected the template temp folder to have been cleaned up", 0, testFolder.getRoot().list().length);
         assertTrue("Expected a map parameter to be passed to mapserver", mapServerRequestQuery.containsKey("map"));
         assertEquals("Expected a map to have been a file in test folder", new File(mapServerRequestQuery.get("map")).getParentFile(), testFolder.getRoot());
@@ -89,7 +92,7 @@ public class MapServerViewTest {
     public void checkThatContentFromMapServerIsForwaredToOutput() throws Exception {
         //Given
         String mapServerContent = "Response From Map Server";
-        URL url = getURLWhichReturns(mapServerContent, new ByteArrayOutputStream());
+        CloseableHttpClient httpClient = getURLWhichReturns(mapServerContent, "image/png");
         
         Template template = mock(Template.class);
                 
@@ -100,20 +103,22 @@ public class MapServerViewTest {
         when(response.getOutputStream()).thenReturn(mapViewOutputStream);
         
         //When
-        MapServerView view = new MapServerView(url, template, testFolder.getRoot());
+        MapServerView view = new MapServerView(httpClient, null, template, testFolder.getRoot());
         view.render(null, request, response);
         
         //Then
         assertEquals("Expected the output from mapserver to be sent to the http response", mapServerContent, mapViewOutputStream.toString());
     }
     
-    private URL getURLWhichReturns(String content, OutputStream output) throws IOException {
-        HttpURLConnection connection = mock(HttpURLConnection.class);
+    private CloseableHttpClient getURLWhichReturns(String content, String type) throws IOException {
+        CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+        HttpEntity entity = new StringEntity(content, ContentType.create(type));
         
-        when(connection.getOutputStream()).thenReturn(output);
-        when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(content.getBytes()));
+        when(httpClient.execute(any(HttpPost.class))).thenReturn(response);
+        when(response.getEntity()).thenReturn(entity);
         
-        return mockUrl(connection);
+        return httpClient;
     }
     
     //helper class to store what a servlet output has been told to write
@@ -130,15 +135,6 @@ public class MapServerViewTest {
         public String toString() {
             return output.toString();
         } 
-    }
-    
-    private URL mockUrl(final URLConnection connection) throws MalformedURLException {
-        return new URL("http://foo.bar", "foo.bar", 80, "", new URLStreamHandler() {
-            @Override
-            protected URLConnection openConnection(final URL arg0) throws IOException {
-                return connection;
-            }
-        });
     }
     
     //I can't find anything that can parse the query sent to map server
