@@ -56,9 +56,8 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         remover.submit(new Runnable() {
             @Override
             public void run() {
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shp").delete();
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shx").delete();
-                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".dbf").delete();
+                deleteShapefile(slice);
+                // Clear out the qix index
                 new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".qix").delete();
             }
         });
@@ -107,8 +106,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         try {
             semaphore.acquire();
             try {
-                generateShapefile(output, sql);
-                indexShapefile(output);
+                process(slice, output, sql);
                 return output.getAbsolutePath();
             }
             finally {
@@ -120,8 +118,8 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         }
     }
     
-    protected void generateShapefile(File output, String sql) throws IOException, InterruptedException, BreadException {
-        ProcessBuilder processBuilder = new ProcessBuilder(
+    protected void process(BreadSlice<String, File> slice, File output, String sql) throws IOException, InterruptedException, BreadException {
+        ProcessBuilder ogr2ogrBuilder = new ProcessBuilder(
                 ogr2ogr,
                 "-f",
                 "ESRI Shapefile",
@@ -130,24 +128,44 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
                 "-sql",
                 sql
             );
+        ProcessBuilder shptreeBuilder = new ProcessBuilder(shptree, output.getAbsolutePath());  
+        
+        //Inherit the IO for both processes
+        ogr2ogrBuilder.inheritIO();
+        shptreeBuilder.inheritIO();
 
         //Start the process and wait for it to end
-        processBuilder.inheritIO(); //Output any errors to the default log files
-        Process process = processBuilder.start();
-        if (process.waitFor() != 0) {
+        if (waitForProcess(ogr2ogrBuilder) != 0) {
             throw new BreadException("The ogr2ogr command failed to execute");
+        }
+        
+        try {
+            if( waitForProcess(shptreeBuilder) != 0 ) {
+                deleteShapefile(slice);
+                throw new BreadException("The shptree command failed to execute. Deleted the shapefile generated");
+            }
+        }
+        catch(IOException io) {
+            deleteShapefile(slice);
+            throw io;
         }
     }
     
-    protected void indexShapefile(File shpfile) throws IOException, InterruptedException, BreadException {
-        ProcessBuilder processBuilder = new ProcessBuilder(shptree, shpfile.getAbsolutePath());
-        
-        //Start the indexing and wait for it to end
-        processBuilder.inheritIO();
-        Process process = processBuilder.start();
-        if (process.waitFor() != 0) {
-            throw new BreadException("The shptree command failed to execute");
-        }
+    /**
+     * The following method is only used so that we can unit test this generator.
+     * Actually triggers and waits for some processbuilder to complete
+     */
+    protected int waitForProcess(ProcessBuilder builder) throws IOException, InterruptedException {
+        return builder.start().waitFor();
+    }
+    
+    /**
+     * Allow us to spy on when a shapefile has been requested to be deleted
+     */
+    protected void deleteShapefile(BreadSlice<?, File> slice) {
+        new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shp").delete();
+        new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shx").delete();
+        new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".dbf").delete();
     }
     
     /**
