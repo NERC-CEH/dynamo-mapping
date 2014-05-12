@@ -22,24 +22,26 @@ import java.util.concurrent.Semaphore;
 public class ShapefileGenerator implements DustBin<File>, Oven<String, String, File> {
     private final ExecutorService remover;
     private final Semaphore semaphore;
-    private final String ogr2ogr, connectionString;
+    private final String ogr2ogr, shptree, connectionString;
     
     /**
      * Creates a shapefile generator based upon an installation of ogr2ogr
-     * @param ogr2ogr the location to the ogr2ogr utlity
+     * @param ogr2ogr the location to the ogr2ogr utility
+     * @param shptree the location to the shptree utility
      * @param connectionString the connection string to supply in calls
      * @param simultaneousProcesses the maximum amount of processes to perform
      *  simultaneously
      */
-    public ShapefileGenerator(String ogr2ogr, String connectionString, int simultaneousProcesses) {
-        this(ogr2ogr, connectionString, new Semaphore(simultaneousProcesses, true), Executors.newSingleThreadExecutor());
+    public ShapefileGenerator(String ogr2ogr, String shptree, String connectionString, int simultaneousProcesses) {
+        this(ogr2ogr, shptree, connectionString, new Semaphore(simultaneousProcesses, true), Executors.newSingleThreadExecutor());
     }
     
     /**
      * Dependency injection constructor
      */
-    protected ShapefileGenerator(String ogr2ogr, String connectionString, Semaphore semaphore, ExecutorService remover) {
+    protected ShapefileGenerator(String ogr2ogr, String shptree, String connectionString, Semaphore semaphore, ExecutorService remover) {
         this.ogr2ogr = ogr2ogr;
+        this.shptree = shptree;
         this.connectionString = connectionString;
         this.semaphore = semaphore;
         this.remover = remover;
@@ -57,6 +59,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
                 new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shp").delete();
                 new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".shx").delete();
                 new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".dbf").delete();
+                new File(slice.getWorkSurface(), slice.getId() + "_" + slice.getMixName() + ".qix").delete();
             }
         });
     }
@@ -91,7 +94,8 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
     
     /**
      * Performs a call to the ogr2ogr command. This method will wait if the maximum
-     * simultaneous calls are being performed.
+     * simultaneous calls are being performed. Once this is done, create a shptree
+     * index in .qix format
      * @param slice the slice to populate
      * @param sql the sql statement to use for generating the shape file
      * @return the outputed shape file (the .shp part)
@@ -103,7 +107,8 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         try {
             semaphore.acquire();
             try {
-                process(output, sql);
+                generateShapefile(output, sql);
+                indexShapefile(output);
                 return output.getAbsolutePath();
             }
             finally {
@@ -115,7 +120,7 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         }
     }
     
-    protected void process(File output, String sql) throws IOException, InterruptedException, BreadException {
+    protected void generateShapefile(File output, String sql) throws IOException, InterruptedException, BreadException {
         ProcessBuilder processBuilder = new ProcessBuilder(
                 ogr2ogr,
                 "-f",
@@ -131,6 +136,17 @@ public class ShapefileGenerator implements DustBin<File>, Oven<String, String, F
         Process process = processBuilder.start();
         if (process.waitFor() != 0) {
             throw new BreadException("The ogr2ogr command failed to execute");
+        }
+    }
+    
+    protected void indexShapefile(File shpfile) throws IOException, InterruptedException, BreadException {
+        ProcessBuilder processBuilder = new ProcessBuilder(shptree, shpfile.getAbsolutePath());
+        
+        //Start the indexing and wait for it to end
+        processBuilder.inheritIO();
+        Process process = processBuilder.start();
+        if (process.waitFor() != 0) {
+            throw new BreadException("The shptree command failed to execute");
         }
     }
     

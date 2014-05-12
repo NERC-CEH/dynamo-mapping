@@ -22,6 +22,7 @@ import org.mockito.Spy;
  */
 public class ShapefileGeneratorTest {
     private static String OGR2OGR = "";
+    private static String SHPTREE = "";
     private static String CONNECTION_STRING = "";
     
     Semaphore semaphore;
@@ -33,10 +34,11 @@ public class ShapefileGeneratorTest {
     public void spyOnGenerator() throws IOException, InterruptedException, BreadException {
         remover = mock(ExecutorService.class);
         semaphore = mock(Semaphore.class);
-        generator = new ShapefileGenerator(OGR2OGR, CONNECTION_STRING, semaphore, remover);
+        generator = new ShapefileGenerator(OGR2OGR, SHPTREE, CONNECTION_STRING, semaphore, remover);
         MockitoAnnotations.initMocks(this);
         
-        doNothing().when(generator).process(any(File.class), any(String.class));
+        doNothing().when(generator).generateShapefile(any(File.class), any(String.class));
+        doNothing().when(generator).indexShapefile(any(File.class));
     }
 
     @Test
@@ -55,7 +57,8 @@ public class ShapefileGeneratorTest {
         //Then
         verify(semaphore, times(1)).acquire(); //Semaphore went down
         verify(semaphore, times(1)).release();//Semaphore went up
-        verify(generator, times(1)).process(eq(new File(workSurface, "0_HASH.shp")), eq(sql));
+        verify(generator, times(1)).generateShapefile(eq(new File(workSurface, "0_HASH.shp")), eq(sql));
+        verify(generator, times(1)).indexShapefile(eq(new File(workSurface, "0_HASH.shp")));
     }
     
     @Test
@@ -64,6 +67,7 @@ public class ShapefileGeneratorTest {
         File shpFile = folder.newFile("0_HASH.shp");
         File shxFile = folder.newFile("0_HASH.shx");
         File dbfFile = folder.newFile("0_HASH.dbf");
+        File qixFile = folder.newFile("0_HASH.qix");
         
         BreadSlice<String, File> slice = mock(BreadSlice.class);
         when(slice.getWorkSurface()).thenReturn(folder.getRoot());
@@ -71,7 +75,7 @@ public class ShapefileGeneratorTest {
         when(slice.getMixName()).thenReturn("HASH");
         
         remover = spy(Executors.newCachedThreadPool());
-        generator = new ShapefileGenerator(OGR2OGR, CONNECTION_STRING, semaphore, remover);
+        generator = new ShapefileGenerator(OGR2OGR, SHPTREE, CONNECTION_STRING, semaphore, remover);
         
         //When
         generator.delete(slice);
@@ -83,6 +87,7 @@ public class ShapefileGeneratorTest {
         assertFalse("Expected shape file to be deleted", shpFile.exists());
         assertFalse("Expected shape file to be deleted", shxFile.exists());
         assertFalse("Expected shape file to be deleted", dbfFile.exists());
+        assertFalse("Expected shape file to be deleted", qixFile.exists());
     } 
     
     @Test
