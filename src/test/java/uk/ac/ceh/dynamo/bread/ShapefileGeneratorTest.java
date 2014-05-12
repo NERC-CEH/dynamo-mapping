@@ -37,8 +37,7 @@ public class ShapefileGeneratorTest {
         generator = new ShapefileGenerator(OGR2OGR, SHPTREE, CONNECTION_STRING, semaphore, remover);
         MockitoAnnotations.initMocks(this);
         
-        doNothing().when(generator).generateShapefile(any(File.class), any(String.class));
-        doNothing().when(generator).indexShapefile(any(File.class));
+        doReturn(0).when(generator).waitForProcess(any(ProcessBuilder.class));
     }
 
     @Test
@@ -57,8 +56,7 @@ public class ShapefileGeneratorTest {
         //Then
         verify(semaphore, times(1)).acquire(); //Semaphore went down
         verify(semaphore, times(1)).release();//Semaphore went up
-        verify(generator, times(1)).generateShapefile(eq(new File(workSurface, "0_HASH.shp")), eq(sql));
-        verify(generator, times(1)).indexShapefile(eq(new File(workSurface, "0_HASH.shp")));
+        verify(generator, times(1)).process(eq(slice), eq(new File(workSurface, "0_HASH.shp")), eq(sql));
     }
     
     @Test
@@ -75,7 +73,7 @@ public class ShapefileGeneratorTest {
         when(slice.getMixName()).thenReturn("HASH");
         
         remover = spy(Executors.newCachedThreadPool());
-        generator = new ShapefileGenerator(OGR2OGR, SHPTREE, CONNECTION_STRING, semaphore, remover);
+        generator = spy(new ShapefileGenerator(OGR2OGR, SHPTREE, CONNECTION_STRING, semaphore, remover));
         
         //When
         generator.delete(slice);
@@ -84,11 +82,62 @@ public class ShapefileGeneratorTest {
         remover.awaitTermination(1, TimeUnit.SECONDS);
         
         //Then
+        verify(generator).deleteShapefile(slice);
         assertFalse("Expected shape file to be deleted", shpFile.exists());
         assertFalse("Expected shape file to be deleted", shxFile.exists());
         assertFalse("Expected shape file to be deleted", dbfFile.exists());
         assertFalse("Expected shape file to be deleted", qixFile.exists());
-    } 
+    }    
+    
+    @Test
+    public void checkShapefileRemovedIfFailedToIndexBecauseOfIOException() throws IOException, BreadException, InterruptedException {
+        //Given        
+        BreadSlice<String, File> slice = mock(BreadSlice.class);
+        when(slice.getWorkSurface()).thenReturn(folder.getRoot());
+        when(slice.getId()).thenReturn(0);
+        when(slice.getMixName()).thenReturn("HASH");
+        
+        doReturn(0).doThrow(new IOException("Failed on io exception"))
+                   .when(generator).waitForProcess(any(ProcessBuilder.class));
+        
+        String sql = "my sql statement";
+        
+        //When
+        try {
+            generator.cook(slice, sql);
+        
+        //Then
+            fail("Expected to catch an BreadException");
+        }
+        catch(BreadException be) {
+            verify(generator, times(1)).deleteShapefile(slice);
+        }
+    }
+    
+    @Test
+    public void checkShapefileRemovedIfFailedToIndexBecauseOfFailedTask() throws IOException, InterruptedException {
+        //Given        
+        BreadSlice<String, File> slice = mock(BreadSlice.class);
+        when(slice.getWorkSurface()).thenReturn(folder.getRoot());
+        when(slice.getId()).thenReturn(0);
+        when(slice.getMixName()).thenReturn("HASH");
+        
+        doReturn(0).doReturn(-1)
+                   .when(generator).waitForProcess(any(ProcessBuilder.class));
+        
+        String sql = "my sql statement";
+        
+        //When
+        try {
+            generator.cook(slice, sql);
+        
+        //Then
+            fail("Expected to catch an BreadException");
+        }
+        catch(BreadException be) {
+            verify(generator, times(1)).deleteShapefile(slice);
+        }
+    }
     
     @Test
     public void checkCanReloadFromExistingDirectory() throws IOException {
