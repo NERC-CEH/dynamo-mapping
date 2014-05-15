@@ -149,7 +149,7 @@ Simply inject this bean into your Dynamo Mapping controller and when preparing y
 Similar sql queries will return the same shapefile until that shapefile has been either:
 
 1. Regenerated because it was requested after it went stale
-2. Went mouldy and was not fix for consumption
+2. Went mouldy and was not fit for consumption
 
 Underlying all of this is the concept of a bread slice. A bread slice is a wrapper around the query (known generically as ingredients). At any time a bread slice can be in any one of four states.
 
