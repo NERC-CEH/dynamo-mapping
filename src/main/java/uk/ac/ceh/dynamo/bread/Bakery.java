@@ -255,6 +255,13 @@ public class Bakery<T, I, W> {
             }
             catch(BreadException ex) {
                 slice.setException(ex);
+                synchronized (lock) {
+                    //If this slice was already put into the cache, we need to remove it
+                    BreadSlice<T, W> cachedSlice = cache.get(slice.getMixName());
+                    if(cachedSlice == slice) {  //if the cached slice is EXACTLY the same as this slice
+                        cache.remove(slice.getMixName());
+                    }
+                }
                 throw ex;
             }
         }

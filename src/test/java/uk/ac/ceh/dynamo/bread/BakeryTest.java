@@ -313,6 +313,28 @@ public class BakeryTest {
     }
     
     @Test
+    public void checkThatAFailedForegroundBakeDoesNotStopRebaking() throws BreadException, InterruptedException {
+        //Given
+        String ingredients = "My Ingredients";
+        when(oven.cook(any(BreadSlice.class), eq(ingredients)))                
+                .thenThrow(new BreadException("Forcing bake failure"))
+                .thenReturn("successful bake");
+        Bakery bakery = createBakery();
+        
+        try { 
+            bakery.getData(ingredients);
+            fail("Expected first bake to fail");
+        }
+        catch(BreadException ex) {}
+        
+        //When
+        Object data = bakery.getData(ingredients);
+        
+        //Then
+        assertEquals("Expected to get a successful bake", "successful bake", data);        
+    }
+    
+    @Test
     public void checkThatAFailedBackgroundBakeDoesNotReplaceStaleData() throws BreadException, InterruptedException {
         //Given
         String ingredients = "My Ingredients";
