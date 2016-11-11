@@ -21,12 +21,13 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    
     <scm>
-        <connection>scm:git:http://github.com/NERC-CEH/dynamo-mapping.git</connection>
-	<url>http://github.com/NERC-CEH/dynamo-mapping.git</url>
-	<developerConnection>scm:git:https://github.com/NERC-CEH/dynamo-mapping.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <connection>scm:git:http://gitlab.ceh.ac.uk/commons/dynamo-mapping.git</connection>
+        <url>http://gitlab.ceh.ac.uk/commons/dynamo-mapping.git</url>
+        <developerConnection>scm:git:https://gitlab.ceh.ac.uk/commons/dynamo-mapping.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
   
     <developers>
         <developer>
